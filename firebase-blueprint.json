@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "ContentItem": {
+      "title": "ContentItem",
+      "description": "A piece of study content (notes, questions, etc.) uploaded by the admin.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the content item",
+          "maxLength": 100
+        },
+        "level": {
+          "type": "string",
+          "description": "CA Level (e.g. CA Foundation)",
+          "maxLength": 50
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject name",
+          "maxLength": 150
+        },
+        "chapter": {
+          "type": "string",
+          "description": "Chapter name",
+          "maxLength": 150
+        },
+        "contentType": {
+          "type": "string",
+          "description": "Type of content (e.g. Study Notes)",
+          "maxLength": 50
+        },
+        "body": {
+          "type": "string",
+          "description": "The HTML/LaTeX/Markdown content body"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Creation timestamp in ms"
+        }
+      },
+      "required": ["id", "level", "subject", "chapter", "contentType", "body", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/content/{contentId}": {
+      "schema": { "$ref": "#/entities/ContentItem" },
+      "description": "Stores all content items across all levels."
+    }
+  }
+}
