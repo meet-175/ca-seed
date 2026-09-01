@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+body,
+body * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Exempt input fields and textareas so forms still work */
+input, textarea {
+  -webkit-user-select: auto !important;
+  -khtml-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+  user-select: auto !important;
+}
+
+@layer utilities {
+  .markdown-body {
+    @apply text-gray-800 leading-relaxed overflow-x-auto;
+  }
+  .markdown-body h1 {
+    @apply text-2xl font-bold mt-6 mb-4 text-gray-900 border-b pb-2;
+  }
+  .markdown-body h2 {
+    @apply text-xl font-bold mt-5 mb-3 text-gray-900;
+  }
+  .markdown-body h3 {
+    @apply text-lg font-bold mt-4 mb-2 text-gray-900;
+  }
+  .markdown-body p {
+    @apply mb-4;
+  }
+  .markdown-body ul {
+    @apply list-disc list-inside mb-4 pl-4 space-y-1;
+  }
+  .markdown-body ol {
+    @apply list-decimal list-inside mb-4 pl-4 space-y-1;
+  }
+  .markdown-body blockquote {
+    @apply border-l-4 border-gray-300 pl-4 py-1 mb-4 italic text-gray-600 bg-gray-50 rounded-r-lg;
+  }
+  .markdown-body code {
+    @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-purple-600;
+  }
+  .markdown-body pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-xl overflow-x-auto mb-4;
+  }
+  .markdown-body pre code {
+    @apply bg-transparent p-0 text-gray-100 text-sm;
+  }
+  .markdown-body a {
+    @apply text-blue-600 hover:underline hover:text-blue-800;
+  }
+  .markdown-body table {
+    @apply w-full text-left border-collapse mb-4;
+  }
+  .markdown-body th, .markdown-body td {
+    @apply border border-gray-200 px-4 py-2;
+  }
+  .markdown-body th {
+    @apply bg-gray-50 font-semibold;
+  }
+
+}
+
+/* Fix KaTeX display issues caused by Tailwind's global resets */
+.katex * {
+  border-color: currentColor !important;
+}
+
+/* Force block equations to align left and handle long equations with horizontal scrolling */
+.katex-display {
+  text-align: left !important;
+  margin-left: 1rem !important; /* Adding a small indent so it looks neat */
+  overflow-x: auto !important; /* Allow horizontal scrolling for long equations */
+  overflow-y: hidden !important;
+  max-width: 100% !important;
+  padding-bottom: 0.5rem !important; /* Space for the scrollbar */
+}
+
+/* Custom minimal scrollbar for equations to keep it professional */
+.katex-display::-webkit-scrollbar {
+  height: 6px;
+}
+.katex-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+.katex-display::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+.katex-display::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Allow inline math equations to scroll horizontally */
+.katex {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+}
+
+/* Prevent double scrollbars when inline math is inside a display block */
+.katex-display .katex {
+  display: block;
+  overflow-x: visible;
+}
+
+/* Add a minimal scrollbar for inline equations to minimize line-height disruption */
+.katex::-webkit-scrollbar {
+  height: 4px;
+}
+.katex::-webkit-scrollbar-track {
+  background: transparent;
+}
+.katex::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
