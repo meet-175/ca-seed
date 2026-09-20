@@ -11,12 +11,12 @@ import Admin from './pages/Admin';
 import Level from './pages/Level';
 import Reader from './pages/Reader';
 import News from './pages/News';
-import ContentTester from './pages/ContentTester';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Disclaimer from './pages/Disclaimer';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
+import ContentTester from './pages/ContentTester';
 
 export default function App() {
   useEffect(() => {
@@ -76,12 +76,12 @@ export default function App() {
               {/* Legacy fallback route */}
               <Route path="/read/:levelId" element={<Reader />} />
               <Route path="/news" element={<News />} />
-              <Route path="/tester" element={<ContentTester />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/about-us" element={<AboutUs />} />
               <Route path="/contact-us" element={<ContactUs />} />
+              <Route path="/tester" element={<ContentTester />} />
             </Routes>
           </div>
           {/* Legal & Navigation Footer */}

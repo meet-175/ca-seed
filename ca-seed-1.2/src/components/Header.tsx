@@ -1,4 +1,4 @@
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -14,7 +14,13 @@ export default function Header({ className }: HeaderProps) {
         <span className="text-xl font-bold tracking-tight">CA Seed</span>
       </Link>
       <div className="flex items-center gap-3">
-        {/* Admin and Tester buttons temporarily removed */}
+        <Link 
+          to="/admin" 
+          className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition-colors border border-white/10"
+        >
+          <Settings className="w-4 h-4" />
+          Admin
+        </Link>
       </div>
     </header>
   );

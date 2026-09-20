@@ -43,7 +43,7 @@ export default function Admin() {
       return [
         { name: 'Study Material' }, 
         { name: 'Exam Update' }, 
-        { name: 'Syllabus' },
+        { name: 'Educational Case Study' },
         { name: 'Professional Update' }
       ];
     }
@@ -238,7 +238,11 @@ export default function Admin() {
                 list="chapter-suggestions"
                 value={chapter}
                 onChange={(e) => setChapter(e.target.value)}
-                placeholder={level === 'News & Updates' ? "e.g. ICAI releases RTPs..." : "e.g. Introduction to Accounting"}
+                placeholder={
+                  level === 'News & Updates' 
+                    ? (subject === 'Educational Case Study' ? "e.g. Issue: Forensic Financial Teardown..." : "e.g. ICAI releases RTPs...") 
+                    : "e.g. Introduction to Accounting"
+                }
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
               />
               {level !== 'News & Updates' && (

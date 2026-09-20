@@ -126,6 +126,18 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
           </div>
           <h2 className="text-2xl font-bold text-gray-900">{config.type}</h2>
         </div>
+        
+        {isAdmin && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+            title="Delete Content"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden md:inline">{isDeleting ? 'Deleting...' : 'Delete'}</span>
+          </button>
+        )}
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 shadow-sm min-h-[200px]">
         {isHtmlContent ? (
@@ -219,16 +231,27 @@ export default function Reader() {
 
   const handleDeleteArticle = async (id: string) => {
     try {
+      if (!formattedLevelName) return;
       await contentStore.deleteContent(id);
-      setContentItems(prev => prev.filter(item => item.id !== id));
       
-      // If we deleted the last item in this chapter, redirect back to subject level
-      if (contentItems.length <= 1) {
-        navigate(`/level/${levelId}`);
+      if (formattedLevelName === 'News & Updates') {
+        navigate('/news');
+        return;
       }
-    } catch (error) {
+      
+      // Refetch the content to ensure state is accurate
+      if (subject && chapter) {
+        const updatedContent = await contentStore.getChapterContent(formattedLevelName, subject, chapter);
+        setContentItems(updatedContent);
+        
+        // If we deleted the last item in this chapter, redirect back to subject level
+        if (updatedContent.length === 0) {
+          navigate(`/level/${levelId}`);
+        }
+      }
+    } catch (error: any) {
       console.error("Error deleting article:", error);
-      alert("Failed to delete article. Please try again.");
+      alert(`Failed to delete article: ${error.message}`);
     }
   };
 
@@ -337,7 +360,7 @@ export default function Reader() {
       <div className="bg-white border-b border-gray-200 py-3 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-20 shadow-sm gap-3">
         <div className="flex items-center justify-between md:justify-start gap-4">
           <button 
-            onClick={() => navigate(`/level/${levelId}`)} 
+            onClick={() => navigate(levelId === 'News & Updates' ? '/news' : `/level/${levelId}`)} 
             className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-purple-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

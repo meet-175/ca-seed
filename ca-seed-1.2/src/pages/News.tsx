@@ -28,6 +28,7 @@ export default function News() {
     switch (category) {
       case 'Study Material': return 'text-purple-700 bg-purple-50 border-purple-100';
       case 'Exam Update': return 'text-red-700 bg-red-50 border-red-100';
+      case 'Educational Case Study': return 'text-emerald-700 bg-emerald-50 border-emerald-100';
       case 'Syllabus': return 'text-emerald-700 bg-emerald-50 border-emerald-100';
       case 'Professional Update': return 'text-indigo-700 bg-indigo-50 border-indigo-100';
       default: return 'text-blue-700 bg-blue-50 border-blue-100';
