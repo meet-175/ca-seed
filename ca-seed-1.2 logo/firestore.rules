@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Admin Check
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'meetp8697@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidContentItem(data) {
+      return data.keys().hasAll(['id', 'level', 'subject', 'chapter', 'contentType', 'body', 'createdAt'])
+        && data.keys().size() == 7
+        && data.id is string && data.id.size() <= 100
+        && data.level is string && data.level.size() <= 50
+        && data.subject is string && data.subject.size() <= 150
+        && data.chapter is string && data.chapter.size() <= 150
+        && data.contentType is string && data.contentType.size() <= 50
+        && data.body is string && data.body.size() <= 500000 // Allow up to ~500KB of HTML/LaTeX
+        && data.createdAt is number;
+    }
+
+    // 2. Content Collection
+    match /content/{contentId} {
+      allow get: if true;
+      allow list: if true; // Publicly readable study content
+      
+      allow create: if isAdmin() && isValidId(contentId) && isValidContentItem(incoming());
+      
+      allow update: if true && isValidId(contentId) && isValidContentItem(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['level', 'subject', 'chapter', 'contentType', 'body', 'createdAt'])
+      );
+      
+      allow delete: if isAdmin();
+    }
+  }
+}
