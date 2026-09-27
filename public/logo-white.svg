@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 84" width="100%" height="100%">
+  <defs>
+    <linearGradient id="logoWhiteGreenGrad" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#4ade80" />
+    </linearGradient>
+    <linearGradient id="logoWhiteLeafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#16a34a" />
+      <stop offset="100%" stop-color="#86efac" />
+    </linearGradient>
+    <filter id="logoWhiteShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Left Icon Emblem -->
+  <g transform="translate(6, 6)">
+    <rect width="72" height="72" rx="18" fill="#581c87" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" />
+    
+    <!-- Red ribbon accent -->
+    <path d="M 34 42 L 34 56 L 36.5 53.5 L 39 56 L 39 42 Z" fill="#ef4444" />
+    
+    <!-- Open Book Pages (Pure White) -->
+    <path d="M 36 46 C 28 43 17 42 11 44 C 10 35 10 26 11 20 C 18 18 28 19 36 23 Z" fill="#ffffff" filter="url(#logoWhiteShadow)" />
+    <path d="M 36 46 C 44 43 55 42 61 44 C 62 35 62 26 61 20 C 54 18 44 19 36 23 Z" fill="#f8fafc" filter="url(#logoWhiteShadow)" />
+    
+    <!-- Spine center divider -->
+    <path d="M 35 23 L 37 23 L 37 46 L 35 46 Z" fill="#cbd5e1" opacity="0.8" />
+
+    <!-- Sprout emerging from center of book -->
+    <path d="M 36 32 Q 35 20 36 13" stroke="url(#logoWhiteGreenGrad)" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <!-- Left leaf -->
+    <path d="M 36 19 C 30 16 26 20 28 25 C 33 26 36 21 36 19 Z" fill="url(#logoWhiteLeafGrad)" />
+    <!-- Right leaf -->
+    <path d="M 36 15 C 42 12 46 16 45 21 C 40 22 37 17 36 15 Z" fill="url(#logoWhiteLeafGrad)" />
+    <!-- Germination node -->
+    <circle cx="36" cy="28" r="1.8" fill="#4ade80" />
+  </g>
+
+  <!-- Typography: CA Seed (White & Light Green) -->
+  <g transform="translate(92, 0)">
+    <text x="0" y="47" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-size="34" font-weight="800" letter-spacing="-0.03em" fill="#ffffff">
+      CA <tspan fill="#a7f3d0">Seed</tspan>
+    </text>
+    
+    <!-- Tagline: Grow Your Concepts -->
+    <text x="1" y="66" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-size="11.5" font-weight="600" letter-spacing="0.12em" text-transform="uppercase" fill="#e9d5ff">
+      Grow Your Concepts
+    </text>
+  </g>
+</svg>
