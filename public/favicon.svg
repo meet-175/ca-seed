@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6b21a8" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#16a34a" />
+      <stop offset="100%" stop-color="#22c55e" />
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#15803d" />
+      <stop offset="100%" stop-color="#4ade80" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Dark Purple Rounded Squircle Background -->
+  <rect width="128" height="128" rx="28" fill="url(#purpleGrad)" />
+
+  <!-- Inner Soft Glow Border -->
+  <rect x="2" y="2" width="124" height="124" rx="26" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-opacity="0.3" />
+
+  <!-- Touch of Red: Elegant Ribbon Bookmark peeking at bottom center -->
+  <path d="M 60 74 L 60 98 L 64 94 L 68 98 L 68 74 Z" fill="#ef4444" />
+
+  <!-- Open Book Base & White Pages with 3D depth -->
+  <path d="M 64 80 C 50 75 30 73 20 77 C 19 62 19 46 20 37 C 32 33 50 35 64 42 Z" fill="#f8fafc" filter="url(#subtleShadow)" />
+  <path d="M 64 78 C 50 73 32 72 23 75 L 23 41 C 33 37 50 39 64 45 Z" fill="#ffffff" />
+  
+  <path d="M 64 80 C 78 75 98 73 108 77 C 109 62 109 46 108 37 C 96 33 78 35 64 42 Z" fill="#e2e8f0" filter="url(#subtleShadow)" />
+  <path d="M 64 78 C 78 73 96 72 105 75 L 105 41 C 95 37 78 39 64 45 Z" fill="#ffffff" />
+
+  <!-- Book Spine Center Fold Shadow -->
+  <path d="M 62 42 Q 64 40 66 42 L 66 80 Q 64 82 62 80 Z" fill="#cbd5e1" opacity="0.6" />
+
+  <!-- Page lines indicator -->
+  <path d="M 30 49 C 40 46 52 48 58 52" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4" />
+  <path d="M 30 58 C 40 55 52 57 58 61" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4" />
+  <path d="M 70 52 C 76 48 88 46 98 49" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4" />
+  <path d="M 70 61 C 76 57 88 55 98 58" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.4" />
+
+  <!-- Sprout Stem (Growing up from spine) -->
+  <path d="M 64 54 Q 63 36 64 24" stroke="url(#greenGrad)" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+  <!-- Left Leaf -->
+  <path d="M 64 34 C 54 30 46 36 49 44 C 58 46 63 38 64 34 Z" fill="url(#leafGrad)" />
+  
+  <!-- Right Leaf -->
+  <path d="M 64 28 C 74 22 82 28 80 37 C 70 38 65 31 64 28 Z" fill="url(#leafGrad)" />
+
+  <!-- Emerald Seed Node -->
+  <circle cx="64" cy="48" r="3" fill="#22c55e" />
+</svg>
