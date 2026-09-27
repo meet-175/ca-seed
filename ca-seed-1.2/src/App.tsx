@@ -17,6 +17,7 @@ import Disclaimer from './pages/Disclaimer';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ContentTester from './pages/ContentTester';
+import Logo from './components/Logo';
 
 export default function App() {
   useEffect(() => {
@@ -87,6 +88,9 @@ export default function App() {
           {/* Legal & Navigation Footer */}
           <footer className="bg-gray-50 border-t border-gray-200 py-8 px-4 mt-auto">
             <div className="max-w-7xl mx-auto flex flex-col items-center">
+              <div className="mb-5">
+                <Logo variant="light" showTagline={true} />
+              </div>
               <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6 text-sm font-medium text-gray-500">
                 <Link to="/about-us" className="hover:text-blue-600 transition-colors">About Us</Link>
                 <Link to="/contact-us" className="hover:text-blue-600 transition-colors">Contact Us</Link>
