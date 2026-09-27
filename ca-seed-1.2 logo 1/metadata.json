@@ -1,0 +1,8 @@
+{
+  "name": "CA Seed",
+  "description": "Comprehensive repository of study materials, notes, and question banks for Chartered Accountancy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
