@@ -77,9 +77,9 @@ export const contentStore = {
     
     const formattedLevelId = 
       levelId === 'News & Updates' ? 'News & Updates' :
-      levelId === 'foundation' ? 'CA Foundation' :
-      levelId === 'intermediate' ? 'CA Intermediate' :
-      levelId === 'final' ? 'CA Final' : '';
+      (levelId === 'foundation' || levelId === 'CA Foundation') ? 'CA Foundation' :
+      (levelId === 'intermediate' || levelId === 'CA Intermediate') ? 'CA Intermediate' :
+      (levelId === 'final' || levelId === 'CA Final') ? 'CA Final' : levelId;
       
     try {
       const q = query(collection(db, 'content'), where('level', '==', formattedLevelId));

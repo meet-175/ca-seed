@@ -215,36 +215,32 @@ export default function Level() {
                                 </div>
 
                                 {/* Question Bank Card */}
-                                {formattedLevelName !== 'CA Foundation' && formattedLevelName !== 'CA Final' && (
-                                  <div 
-                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-bank`)}
-                                    className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm"
-                                  >
-                                    <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
-                                      <HelpCircle className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Bank</h4>
-                                      <p className="text-xs md:text-sm text-gray-500">Practice questions with detailed solutions</p>
-                                    </div>
+                                <div 
+                                  onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-bank`)}
+                                  className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm"
+                                >
+                                  <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+                                    <HelpCircle className="w-6 h-6" />
                                   </div>
-                                )}
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Bank</h4>
+                                    <p className="text-xs md:text-sm text-gray-500">Practice questions with detailed solutions</p>
+                                  </div>
+                                </div>
 
                                 {/* MCQ Bank Card */}
-                                {formattedLevelName !== 'CA Foundation' && (
-                                  <div 
-                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
-                                    className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
-                                  >
-                                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                                      <CheckSquare className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Multiple Choice</h4>
-                                      <p className="text-xs md:text-sm text-gray-500">Test your knowledge with MCQs</p>
-                                    </div>
+                                <div 
+                                  onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
+                                  className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
+                                >
+                                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                                    <CheckSquare className="w-6 h-6" />
                                   </div>
-                                )}
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Multiple Choice</h4>
+                                    <p className="text-xs md:text-sm text-gray-500">Test your knowledge with MCQs</p>
+                                  </div>
+                                </div>
                                 
                                 {/* Question Diagnosis Card */}
                                 {!(formattedLevelName === 'CA Intermediate' && (selectedSubject === 'Advanced Accounting' || selectedSubject === 'Taxation')) && (

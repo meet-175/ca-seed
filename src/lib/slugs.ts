@@ -10,15 +10,29 @@ export function slugify(text: string): string {
     .replace(/-+$/, '');
 }
 
+function normalizeLevelKey(levelId: string): keyof typeof SYLLABUS | null {
+  if (!levelId) return null;
+  const lower = levelId.toLowerCase();
+  if (lower === 'foundation' || lower === 'ca foundation') return 'CA Foundation';
+  if (lower === 'intermediate' || lower === 'ca intermediate') return 'CA Intermediate';
+  if (lower === 'final' || lower === 'ca final') return 'CA Final';
+  if (levelId in SYLLABUS) return levelId as keyof typeof SYLLABUS;
+  return null;
+}
+
 export function unslugifySubject(levelId: string, subjectSlug: string): string | null {
-  const level = SYLLABUS[levelId as keyof typeof SYLLABUS];
+  const levelKey = normalizeLevelKey(levelId);
+  if (!levelKey) return null;
+  const level = SYLLABUS[levelKey];
   if (!level) return null;
   const match = level.find(s => slugify(s.name) === subjectSlug);
   return match ? match.name : null;
 }
 
 export function unslugifyChapter(levelId: string, subjectSlug: string, chapterSlug: string): string | null {
-  const level = SYLLABUS[levelId as keyof typeof SYLLABUS];
+  const levelKey = normalizeLevelKey(levelId);
+  if (!levelKey) return null;
+  const level = SYLLABUS[levelKey];
   if (!level) return null;
   const subject = level.find(s => slugify(s.name) === subjectSlug);
   if (!subject) return null;
