@@ -56,6 +56,19 @@ export default function Home() {
         <meta property="og:type" content="website" />
         <meta name="twitter:title" content="CA Seed - Complete Study Material & Question Banks" />
         <meta name="twitter:description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "CA Seed",
+            "url": "https://ca-seed.pages.dev/",
+            "description": "Premium study materials, notes, and question banks for CA Foundation, Intermediate, and Final students.",
+            "publisher": {
+              "@type": "Organization",
+              "name": "CA Seed"
+            }
+          })}
+        </script>
       </Helmet>
       <Header />
       

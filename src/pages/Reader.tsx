@@ -9,6 +9,10 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import { visit } from 'unist-util-visit';
 import 'katex/dist/katex.min.css';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '../firebase';
+
+import { unslugifySubject, unslugifyChapter, slugify } from '../lib/slugs';
 
 const remarkReplaceRupee = () => {
   return (tree: any) => {
@@ -32,12 +36,24 @@ const SECTION_CONFIG = [
   { id: 'question-diagnosis', type: 'Question Diagnosis', icon: Activity, colorClass: 'bg-emerald-50 text-emerald-600' }
 ];
 
-const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: any; chapter: string }) => {
+const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: ContentItem; config: any; chapter: string; isAdmin?: boolean; onDelete?: (id: string) => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const isHtmlContent = useMemo(() => {
     const text = item.body.trim().toLowerCase();
     return text.startsWith('<!doctype html>') || text.startsWith('<html');
   }, [item]);
+
+  const handleDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete this ${config.type}?`)) {
+      setIsDeleting(true);
+      if (onDelete) {
+        await onDelete(item.id);
+      }
+      setIsDeleting(false);
+    }
+  };
 
   const injectedHtml = useMemo(() => {
     if (!isHtmlContent) return '';
@@ -103,11 +119,13 @@ const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: 
 
   return (
     <div id={config.id} className="scroll-mt-48 mb-16">
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${config.colorClass}`}>
-          <config.icon className="w-5 h-5" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${config.colorClass}`}>
+            <config.icon className="w-5 h-5" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">{config.type}</h2>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">{config.type}</h2>
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 shadow-sm min-h-[200px]">
         {isHtmlContent ? (
@@ -134,12 +152,28 @@ const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: 
 };
 
 export default function Reader() {
-  const { levelId } = useParams();
+  const { levelId, subjectSlug, chapterSlug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
   
-  const subject = searchParams.get('subject') || '';
-  const chapter = searchParams.get('chapter') || '';
+  const rawSubject = searchParams.get('subject') || '';
+  const rawChapter = searchParams.get('chapter') || '';
+
+  const subject = subjectSlug && levelId 
+    ? (unslugifySubject(levelId, subjectSlug) || rawSubject) 
+    : rawSubject;
+    
+  const chapter = chapterSlug && levelId && subjectSlug
+    ? (unslugifyChapter(levelId, subjectSlug, chapterSlug) || rawChapter)
+    : rawChapter;
 
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,6 +216,32 @@ export default function Reader() {
       }, 100);
     });
   }, [formattedLevelName, subject, chapter]);
+
+  const handleDeleteArticle = async (id: string) => {
+    try {
+      if (!formattedLevelName) return;
+      await contentStore.deleteContent(id);
+      
+      if (formattedLevelName === 'News & Updates') {
+        navigate('/news');
+        return;
+      }
+      
+      // Refetch the content to ensure state is accurate
+      if (subject && chapter) {
+        const updatedContent = await contentStore.getChapterContent(formattedLevelName, subject, chapter);
+        setContentItems(updatedContent);
+        
+        // If we deleted the last item in this chapter, redirect back to subject level
+        if (updatedContent.length === 0) {
+          navigate(`/level/${levelId}`);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error deleting article:", error);
+      alert(`Failed to delete article: ${error.message}`);
+    }
+  };
 
   const handleShare = async (platform: string) => {
     const url = window.location.href;
@@ -237,6 +297,14 @@ export default function Reader() {
     </div>
   );
 
+  const handleNavigateChapter = (newChapter: string) => {
+    if (levelId === 'News & Updates') {
+      setSearchParams({ subject, chapter: newChapter });
+    } else {
+      navigate(`/study/${levelId}/${slugify(subject)}/${slugify(newChapter)}`);
+    }
+  };
+
   const scrollToSection = (id: string) => {
     window.location.hash = id;
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -255,6 +323,24 @@ export default function Reader() {
         <meta property="og:title" content={chapter ? `${chapter} - CA Seed` : 'Reader - CA Seed'} />
         <meta property="og:description" content={`Read ${subject} - ${chapter} on CA Seed. Free study materials and resources.`} />
         <meta property="og:type" content="article" />
+        {chapter && subject && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Article",
+              "headline": `${chapter} - ${subject}`,
+              "description": `Read ${subject} - ${chapter} on CA Seed. Free study materials and resources.`,
+              "author": {
+                "@type": "Organization",
+                "name": "CA Seed"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "CA Seed"
+              }
+            })}
+          </script>
+        )}
       </Helmet>
       <Header />
 
@@ -262,7 +348,7 @@ export default function Reader() {
       <div className="bg-white border-b border-gray-200 py-3 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-20 shadow-sm gap-3">
         <div className="flex items-center justify-between md:justify-start gap-4">
           <button 
-            onClick={() => navigate(`/level/${levelId}`)} 
+            onClick={() => navigate(levelId === 'News & Updates' ? '/news' : `/level/${levelId}`)} 
             className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-purple-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -318,7 +404,7 @@ export default function Reader() {
         ) : activeSections.length > 0 ? (
           <div className="space-y-4">
             {activeSections.map(({ config, item }) => (
-              <ContentSection key={config.id} item={item!} config={config} chapter={chapter} />
+              <ContentSection key={config.id} item={item!} config={config} chapter={chapter} isAdmin={!!user} onDelete={handleDeleteArticle} />
             ))}
           </div>
         ) : (
@@ -342,7 +428,7 @@ export default function Reader() {
         <div className="mt-12 flex items-center justify-between border-t border-gray-200 pt-8 mb-12">
           {prevChapter ? (
             <button 
-              onClick={() => setSearchParams({ subject, chapter: prevChapter })}
+              onClick={() => handleNavigateChapter(prevChapter)}
               className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold transition-colors shadow-sm"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -352,7 +438,7 @@ export default function Reader() {
 
           {nextChapter ? (
              <button 
-               onClick={() => setSearchParams({ subject, chapter: nextChapter })}
+               onClick={() => handleNavigateChapter(nextChapter)}
                className="flex items-center gap-2 px-6 py-2.5 bg-[#9333ea] hover:bg-[#7e22ce] text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
              >
                Next Chapter

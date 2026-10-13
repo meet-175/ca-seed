@@ -30,55 +30,34 @@ export default function App() {
       e.preventDefault();
     };
 
-    // 3. Prevent Drag & Drop
-    const handleDragStart = (e: DragEvent) => {
-      e.preventDefault();
-    };
-
-    // 4. Keyboard Shortcut Blocking
+    // 3. Keyboard Shortcut Interception
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent Print (Ctrl+P / Cmd+P)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      // F12
+      if (e.key === 'F12') {
         e.preventDefault();
       }
-      // Prevent Save Page (Ctrl+S / Cmd+S)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-      }
-      // Prevent Copy (Ctrl+C / Cmd+C)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
-        e.preventDefault();
-      }
-      // Prevent Select All (Ctrl+A / Cmd+A)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
-        e.preventDefault();
-      }
-      // Prevent View Source (Ctrl+U / Cmd+U)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
-        e.preventDefault();
-      }
-      // Prevent DevTools (F12 or Ctrl+Shift+I / Cmd+Option+I / Cmd+Shift+C)
-      if (
-        e.key === 'F12' ||
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'j'))
-      ) {
-        e.preventDefault();
+      
+      // Ctrl/Cmd + C, A, U
+      if (cmdOrCtrl) {
+        const key = e.key.toLowerCase();
+        if (key === 'c' || key === 'a' || key === 'u') {
+          e.preventDefault();
+        }
       }
     };
 
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('copy', handleClipboard);
     document.addEventListener('cut', handleClipboard);
-    document.addEventListener('paste', handleClipboard);
-    document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('copy', handleClipboard);
       document.removeEventListener('cut', handleClipboard);
-      document.removeEventListener('paste', handleClipboard);
-      document.removeEventListener('dragstart', handleDragStart);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
@@ -86,7 +65,7 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
-        <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">
+        <div className="flex flex-col min-h-screen">
           <div className="flex-1">
             <Routes>
               <Route path="/" element={<Home />} />

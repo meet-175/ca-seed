@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDocs, getDocsFromCache, query, where, orderBy, limit, Query } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, getDocsFromCache, query, where, orderBy, limit, Query, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 export interface ContentItem {
@@ -63,7 +63,7 @@ export const contentStore = {
     try {
       const q = query(collection(db, 'content'), orderBy('createdAt', 'desc'));
       const snapshot = await fetchWithCacheFallback(q);
-      const data = snapshot.docs.map(doc => doc.data() as ContentItem);
+      const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
       cache.allContent = data;
       return data;
     } catch (error) {
@@ -84,7 +84,7 @@ export const contentStore = {
     try {
       const q = query(collection(db, 'content'), where('level', '==', formattedLevelId));
       const snapshot = await fetchWithCacheFallback(q);
-      const data = snapshot.docs.map(doc => doc.data() as ContentItem);
+      const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
       cache.levelContent[levelId] = data;
       return data;
     } catch (error) {
@@ -105,7 +105,7 @@ export const contentStore = {
         where('chapter', '==', chapter)
       );
       const snapshot = await fetchWithCacheFallback(q);
-      const items = snapshot.docs.map(doc => doc.data() as ContentItem);
+      const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
       // Group by contentType and return the most recent of each type
       const grouped = items.reduce((acc, item) => {
         if (!acc[item.contentType] || acc[item.contentType].createdAt < item.createdAt) {
@@ -135,7 +135,7 @@ export const contentStore = {
         where('contentType', '==', contentType)
       );
       const snapshot = await fetchWithCacheFallback(q);
-      const items = snapshot.docs.map(doc => doc.data() as ContentItem);
+      const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
       // Return most recent if multiple
       const result = items.sort((a, b) => b.createdAt - a.createdAt)[0];
       cache.specificContent[cacheKey] = result;
@@ -146,6 +146,20 @@ export const contentStore = {
     }
   },
 
+  deleteContent: async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'content', id));
+      
+      // Invalidate caches
+      cache.allContent = null;
+      cache.levelContent = {};
+      cache.chapterContent = {};
+      cache.specificContent = {};
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      throw error;
+    }
+  },
   exportToJson: async () => {
     const data = await contentStore.getAllContent();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

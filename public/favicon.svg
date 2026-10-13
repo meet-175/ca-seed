@@ -27,11 +27,19 @@
   <path d="M 60 74 L 60 98 L 64 94 L 68 98 L 68 74 Z" fill="#ef4444" />
 
   <!-- Open Book Base & White Pages with 3D depth -->
-  <path d="M 64 80 C 50 75 30 73 20 77 C 19 62 19 46 20 37 C 32 33 50 35 64 42 Z" fill="#f8fafc" filter="url(#subtleShadow)" />
-  <path d="M 64 78 C 50 73 32 72 23 75 L 23 41 C 33 37 50 39 64 45 Z" fill="#ffffff" />
+  <!-- Left Page Stack -->
+  <path d="M 64 80 C 50 75 30 73 20 77 C 19 62 19 46 20 37 C 32 33 50 35 64 42 Z" 
+        fill="#f8fafc" 
+        filter="url(#subtleShadow)" />
+  <path d="M 64 78 C 50 73 32 72 23 75 L 23 41 C 33 37 50 39 64 45 Z" 
+        fill="#ffffff" />
   
-  <path d="M 64 80 C 78 75 98 73 108 77 C 109 62 109 46 108 37 C 96 33 78 35 64 42 Z" fill="#e2e8f0" filter="url(#subtleShadow)" />
-  <path d="M 64 78 C 78 73 96 72 105 75 L 105 41 C 95 37 78 39 64 45 Z" fill="#ffffff" />
+  <!-- Right Page Stack -->
+  <path d="M 64 80 C 78 75 98 73 108 77 C 109 62 109 46 108 37 C 96 33 78 35 64 42 Z" 
+        fill="#e2e8f0" 
+        filter="url(#subtleShadow)" />
+  <path d="M 64 78 C 78 73 96 72 105 75 L 105 41 C 95 37 78 39 64 45 Z" 
+        fill="#ffffff" />
 
   <!-- Book Spine Center Fold Shadow -->
   <path d="M 62 42 Q 64 40 66 42 L 66 80 Q 64 82 62 80 Z" fill="#cbd5e1" opacity="0.6" />
@@ -48,9 +56,9 @@
   <!-- Left Leaf -->
   <path d="M 64 34 C 54 30 46 36 49 44 C 58 46 63 38 64 34 Z" fill="url(#leafGrad)" />
   
-  <!-- Right Leaf -->
+  <!-- Right Leaf (flourishing higher) -->
   <path d="M 64 28 C 74 22 82 28 80 37 C 70 38 65 31 64 28 Z" fill="url(#leafGrad)" />
 
-  <!-- Emerald Seed Node -->
+  <!-- Golden/Emerald Seed Germination node -->
   <circle cx="64" cy="48" r="3" fill="#22c55e" />
 </svg>

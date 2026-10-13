@@ -1,4 +1,3 @@
-import { Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -10,7 +9,7 @@ export default function Header({ className }: HeaderProps) {
   return (
     <header className={cn("flex items-center justify-between px-6 py-3.5 bg-[#7e22ce] text-white shrink-0 shadow-sm", className)}>
       <Link to="/" className="group flex items-center gap-3 select-none hover:opacity-95 transition-opacity">
-        {/* Pure Inline Vector Logo Emblem */}
+        {/* Inline Vector Logo Icon */}
         <div className="relative flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-sm transition-transform group-hover:scale-105">
           <svg
             viewBox="0 0 72 72"
@@ -38,7 +37,7 @@ export default function Header({ className }: HeaderProps) {
               strokeWidth="1.5"
             />
 
-            {/* Red Bookmark Ribbon */}
+            {/* Touch of Red Bookmark Ribbon */}
             <path d="M 34 42 L 34 56 L 36.5 53.5 L 39 56 L 39 42 Z" fill="#ef4444" />
 
             {/* Open Book White Pages */}
@@ -52,7 +51,7 @@ export default function Header({ className }: HeaderProps) {
             />
             <path d="M 35 23 L 37 23 L 37 46 L 35 46 Z" fill="#cbd5e1" opacity="0.8" />
 
-            {/* Sprout Stem */}
+            {/* Growing Sprout Stem */}
             <path
               d="M 36 32 Q 35 20 36 13"
               stroke="#22c55e"
@@ -60,7 +59,7 @@ export default function Header({ className }: HeaderProps) {
               strokeLinecap="round"
               fill="none"
             />
-            {/* Sprout Leaves */}
+            {/* Leaves */}
             <path
               d="M 36 19 C 30 16 26 20 28 25 C 33 26 36 21 36 19 Z"
               fill="url(#headerLeafGrad)"
@@ -69,7 +68,7 @@ export default function Header({ className }: HeaderProps) {
               d="M 36 15 C 42 12 46 16 45 21 C 40 22 37 17 36 15 Z"
               fill="url(#headerLeafGrad)"
             />
-            {/* Emerald Node */}
+            {/* Emerald Seed Center */}
             <circle cx="36" cy="28" r="1.8" fill="#4ade80" />
           </svg>
         </div>
@@ -89,16 +88,6 @@ export default function Header({ className }: HeaderProps) {
           </span>
         </div>
       </Link>
-
-      <div className="flex items-center gap-3">
-        <Link 
-          to="/admin" 
-          className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition-colors border border-white/10"
-        >
-          <Settings className="w-4 h-4" />
-          Admin
-        </Link>
-      </div>
     </header>
   );
 }

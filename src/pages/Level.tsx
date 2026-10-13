@@ -6,6 +6,7 @@ import { contentStore, ContentItem } from '../content/store';
 import { ArrowLeft, Search, ChevronDown, MessageCircle, Send, Link as LinkIcon, FileText, HelpCircle, CheckSquare, Activity } from 'lucide-react';
 import { SYLLABUS } from '../data/syllabus';
 import { cn } from '../lib/utils';
+import { slugify } from '../lib/slugs';
 
 export default function Level() {
   const { levelId } = useParams();
@@ -51,14 +52,14 @@ export default function Level() {
 
   const handleShare = (platform: 'whatsapp' | 'telegram' | 'link', chapterName: string) => {
     const text = `Hey, found really good study material for ${chapterName}`;
-    const url = window.location.href;
+    const chapterUrl = `${window.location.origin}/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapterName)}`;
     
     if (platform === 'whatsapp') {
-      window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+      window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + chapterUrl)}`, '_blank');
     } else if (platform === 'telegram') {
-      window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(chapterUrl)}&text=${encodeURIComponent(text)}`, '_blank');
     } else {
-      navigator.clipboard.writeText(url);
+      navigator.clipboard.writeText(chapterUrl);
       alert('Link copied to clipboard!');
     }
   };
@@ -70,6 +71,20 @@ export default function Level() {
         <meta name="description" content={`Access free study notes, question banks, and solutions for ${formattedLevelName}.`} />
         <meta property="og:title" content={formattedLevelName ? `${formattedLevelName} Study Material - CA Seed` : 'Level - CA Seed'} />
         <meta property="og:description" content={`Access free study notes, question banks, and solutions for ${formattedLevelName}.`} />
+        {formattedLevelName && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": `${formattedLevelName} Study Material - CA Seed`,
+              "description": `Access free study notes, question banks, and solutions for ${formattedLevelName}.`,
+              "publisher": {
+                "@type": "Organization",
+                "name": "CA Seed"
+              }
+            })}
+          </script>
+        )}
       </Helmet>
       <Header />
       
@@ -187,7 +202,7 @@ export default function Level() {
                               <div className="flex flex-col gap-3 mt-2">
                                 {/* Study Notes Card */}
                                 <div 
-                                  onClick={() => navigate(`/read/${levelId}?subject=${encodeURIComponent(selectedSubject)}&chapter=${encodeURIComponent(chapter)}#study-notes`)}
+                                  onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#study-notes`)}
                                   className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-purple-100 hover:border-purple-300 hover:shadow-sm"
                                 >
                                   <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center text-pink-500 shrink-0">
@@ -202,7 +217,7 @@ export default function Level() {
                                 {/* Question Bank Card */}
                                 {formattedLevelName !== 'CA Foundation' && formattedLevelName !== 'CA Final' && (
                                   <div 
-                                    onClick={() => navigate(`/read/${levelId}?subject=${encodeURIComponent(selectedSubject)}&chapter=${encodeURIComponent(chapter)}#question-bank`)}
+                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-bank`)}
                                     className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm"
                                   >
                                     <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
@@ -218,7 +233,7 @@ export default function Level() {
                                 {/* MCQ Bank Card */}
                                 {formattedLevelName !== 'CA Foundation' && (
                                   <div 
-                                    onClick={() => navigate(`/read/${levelId}?subject=${encodeURIComponent(selectedSubject)}&chapter=${encodeURIComponent(chapter)}#mcq-bank`)}
+                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
                                     className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
                                   >
                                     <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
@@ -234,7 +249,7 @@ export default function Level() {
                                 {/* Question Diagnosis Card */}
                                 {!(formattedLevelName === 'CA Intermediate' && (selectedSubject === 'Advanced Accounting' || selectedSubject === 'Taxation')) && (
                                   <div 
-                                    onClick={() => navigate(`/read/${levelId}?subject=${encodeURIComponent(selectedSubject)}&chapter=${encodeURIComponent(chapter)}#question-diagnosis`)}
+                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-diagnosis`)}
                                     className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm"
                                   >
                                     <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
