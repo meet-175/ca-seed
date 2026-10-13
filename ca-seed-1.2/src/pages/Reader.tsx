@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -126,18 +126,6 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
           </div>
           <h2 className="text-2xl font-bold text-gray-900">{config.type}</h2>
         </div>
-        
-        {isAdmin && (
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
-            title="Delete Content"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="hidden md:inline">{isDeleting ? 'Deleting...' : 'Delete'}</span>
-          </button>
-        )}
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 shadow-sm min-h-[200px]">
         {isHtmlContent ? (
