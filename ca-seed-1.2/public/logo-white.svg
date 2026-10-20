@@ -40,10 +40,10 @@
     <circle cx="36" cy="28" r="1.8" fill="#4ade80" />
   </g>
 
-  <!-- Typography: CA Seed (White & Light Green) -->
+  <!-- Typography: Chartered Seeds (White & Light Green) -->
   <g transform="translate(92, 0)">
-    <text x="0" y="47" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-size="34" font-weight="800" letter-spacing="-0.03em" fill="#ffffff">
-      CA <tspan fill="#a7f3d0">Seed</tspan>
+    <text x="0" y="47" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-size="30" font-weight="800" letter-spacing="-0.03em" fill="#ffffff">
+      Chartered <tspan fill="#a7f3d0">Seeds</tspan>
     </text>
     
     <!-- Tagline: Grow Your Concepts -->

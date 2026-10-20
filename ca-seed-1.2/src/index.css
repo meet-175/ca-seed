@@ -19,6 +19,22 @@ input, textarea {
   user-select: auto !important;
 }
 
+/* Prevent image dragging and saving */
+img, svg:not([data-interactive]) {
+  -webkit-user-drag: none !important;
+  user-select: none !important;
+}
+
+/* Anti-Screenshot & Anti-Printing Rules: Blank out print preview and PDF capture */
+@media print {
+  html, body {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
 @layer utilities {
   .markdown-body {
     @apply text-gray-800 leading-relaxed overflow-x-auto;

@@ -38,9 +38,9 @@ export default function News() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
       <Helmet>
-        <title>News & Updates - CA Seed</title>
+        <title>News & Updates - Chartered Seeds</title>
         <meta name="description" content="Stay up-to-date with the latest exam announcements, study material updates, and syllabus changes for CA students." />
-        <meta property="og:title" content="News & Updates - CA Seed" />
+        <meta property="og:title" content="News & Updates - Chartered Seeds" />
         <meta property="og:description" content="Stay up-to-date with the latest exam announcements, study material updates, and syllabus changes for CA students." />
       </Helmet>
       <Header />

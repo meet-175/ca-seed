@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Bookmark, BookmarkCheck } from 'lucide-react';
+import { useBookmarks } from '../lib/libraryStore';
+import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -36,24 +38,13 @@ const SECTION_CONFIG = [
   { id: 'question-diagnosis', type: 'Question Diagnosis', icon: Activity, colorClass: 'bg-emerald-50 text-emerald-600' }
 ];
 
-const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: ContentItem; config: any; chapter: string; isAdmin?: boolean; onDelete?: (id: string) => void }) => {
+const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: any; chapter: string; isAdmin?: boolean; onDelete?: (id: string) => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const isHtmlContent = useMemo(() => {
     const text = item.body.trim().toLowerCase();
     return text.startsWith('<!doctype html>') || text.startsWith('<html');
   }, [item]);
-
-  const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete this ${config.type}?`)) {
-      setIsDeleting(true);
-      if (onDelete) {
-        await onDelete(item.id);
-      }
-      setIsDeleting(false);
-    }
-  };
 
   const injectedHtml = useMemo(() => {
     if (!isHtmlContent) return '';
@@ -74,18 +65,54 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
           -ms-user-select: auto !important;
           user-select: auto !important;
         }
+        img {
+          -webkit-user-drag: none !important;
+          user-select: none !important;
+        }
+        @media print {
+          html, body {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            overflow: hidden !important;
+          }
+        }
       </style>
       <script>
+        const wipeClipboard = () => {
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText('⚠️ Screenshots of Chartered Seeds study materials are prohibited.').catch(() => {});
+            }
+          } catch (err) {}
+        };
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('copy', e => e.preventDefault());
         document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
         document.addEventListener('keydown', e => {
           const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
           const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
-          if (e.key === 'F12' || (cmdOrCtrl && ['c', 'a', 'u'].includes(e.key.toLowerCase()))) {
+          const key = (e.key || '').toLowerCase();
+          if (
+            e.key === 'PrintScreen' ||
+            e.keyCode === 44 ||
+            (cmdOrCtrl && ['c', 'a', 'u', 'p', 's'].includes(key)) ||
+            (e.shiftKey && (cmdOrCtrl || e.metaKey) && key === 's') ||
+            (isMac && e.metaKey && e.shiftKey && ['3', '4', '5'].includes(key)) ||
+            e.key === 'F12' ||
+            (cmdOrCtrl && e.shiftKey && ['i', 'j', 'c'].includes(key))
+          ) {
             e.preventDefault();
+            e.stopPropagation();
+            wipeClipboard();
           }
-        });
+        }, true);
+        document.addEventListener('keyup', e => {
+          if (e.key === 'PrintScreen' || e.keyCode === 44) {
+            wipeClipboard();
+          }
+        }, true);
         window.MathJax = {
           tex: {
             inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
@@ -186,6 +213,25 @@ export default function Reader() {
       ? 'CA Intermediate' 
       : 'CA Final';
 
+  const { count: libraryCount, toggle, checkBookmarked } = useBookmarks();
+  const [bookmarkToast, setBookmarkToast] = useState<string | null>(null);
+
+  const isBookmarked = checkBookmarked(levelId || '', subject, chapter);
+
+  const handleToggleBookmark = () => {
+    if (!levelId || !subject || !chapter) return;
+    const isNowSaved = toggle({
+      levelId,
+      levelName: formattedLevelName,
+      subject,
+      chapter
+    });
+    setBookmarkToast(isNowSaved ? 'Chapter saved to My Library!' : 'Chapter removed from My Library');
+    setTimeout(() => {
+      setBookmarkToast(null);
+    }, 2800);
+  };
+
   useEffect(() => {
     setLoading(true);
     
@@ -245,7 +291,7 @@ export default function Reader() {
 
   const handleShare = async (platform: string) => {
     const url = window.location.href;
-    const text = `Check out study materials for ${chapter} - ${subject} on CA Seed!`;
+    const text = `Check out study materials for ${chapter} - ${subject} on Chartered Seeds!`;
     
     switch (platform) {
       case 'whatsapp':
@@ -310,7 +356,18 @@ export default function Reader() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const activeSections = SECTION_CONFIG.map(config => {
+  const isFoundation = formattedLevelName === 'CA Foundation' || levelId === 'foundation';
+
+  const visibleConfigs = useMemo(() => {
+    return SECTION_CONFIG.filter(config => {
+      if (isFoundation && (config.id === 'mcq-bank' || config.type === 'MCQ Bank')) {
+        return false;
+      }
+      return true;
+    });
+  }, [isFoundation]);
+
+  const activeSections = visibleConfigs.map(config => {
     const item = contentItems.find(c => c.contentType === config.type || c.contentType === config.altType);
     return { config, item };
   }).filter(section => section.item !== undefined);
@@ -318,10 +375,10 @@ export default function Reader() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Helmet>
-        <title>{chapter ? `${chapter} - CA Seed` : 'Reader - CA Seed'}</title>
-        <meta name="description" content={`Read ${subject} - ${chapter} on CA Seed. Free study materials and resources.`} />
-        <meta property="og:title" content={chapter ? `${chapter} - CA Seed` : 'Reader - CA Seed'} />
-        <meta property="og:description" content={`Read ${subject} - ${chapter} on CA Seed. Free study materials and resources.`} />
+        <title>{chapter ? `${chapter} - Chartered Seeds` : 'Reader - Chartered Seeds'}</title>
+        <meta name="description" content={`Read ${subject} - ${chapter} on Chartered Seeds. Free study materials and resources.`} />
+        <meta property="og:title" content={chapter ? `${chapter} - Chartered Seeds` : 'Reader - Chartered Seeds'} />
+        <meta property="og:description" content={`Read ${subject} - ${chapter} on Chartered Seeds. Free study materials and resources.`} />
         <meta property="og:type" content="article" />
         {chapter && subject && (
           <script type="application/ld+json">
@@ -329,14 +386,14 @@ export default function Reader() {
               "@context": "https://schema.org",
               "@type": "Article",
               "headline": `${chapter} - ${subject}`,
-              "description": `Read ${subject} - ${chapter} on CA Seed. Free study materials and resources.`,
+              "description": `Read ${subject} - ${chapter} on Chartered Seeds. Free study materials and resources.`,
               "author": {
                 "@type": "Organization",
-                "name": "CA Seed"
+                "name": "Chartered Seeds"
               },
               "publisher": {
                 "@type": "Organization",
-                "name": "CA Seed"
+                "name": "Chartered Seeds"
               }
             })}
           </script>
@@ -346,13 +403,28 @@ export default function Reader() {
 
       {/* Sub-Header */}
       <div className="bg-white border-b border-gray-200 py-3 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-20 shadow-sm gap-3">
-        <div className="flex items-center justify-between md:justify-start gap-4">
+        <div className="flex items-center justify-between md:justify-start gap-3">
           <button 
             onClick={() => navigate(levelId === 'News & Updates' ? '/news' : `/level/${levelId}`)} 
-            className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-purple-700 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-purple-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
+          </button>
+
+          <button
+            type="button"
+            onClick={handleToggleBookmark}
+            title={isBookmarked ? "Chapter saved in My Library (Click to remove)" : "Save chapter to My Library"}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border shadow-xs cursor-pointer",
+              isBookmarked
+                ? "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/30"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100 border-gray-200"
+            )}
+          >
+            <Bookmark className={cn("w-3.5 h-3.5 transition-transform", isBookmarked ? "fill-amber-500 text-amber-500 scale-105" : "text-gray-400")} />
+            <span className="hidden sm:inline">{isBookmarked ? 'Saved' : 'Bookmark'}</span>
           </button>
           
           <div className="hidden md:block text-xs font-semibold text-gray-500 tracking-wider">
@@ -379,12 +451,42 @@ export default function Reader() {
 
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8">
         
-        {/* Title and Share */}
+        {/* Title, Bookmark & Share */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight max-w-3xl">
               {chapter}
             </h1>
+
+            {/* Quick Actions Bar: Bookmark Button & My Library Link */}
+            <div className="flex items-center gap-3 mt-3.5 flex-wrap">
+              <button
+                type="button"
+                onClick={handleToggleBookmark}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all border shadow-sm cursor-pointer",
+                  isBookmarked
+                    ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/25"
+                    : "bg-white hover:bg-purple-50 text-gray-700 hover:text-purple-800 border-gray-200 hover:border-purple-200"
+                )}
+                title={isBookmarked ? "Chapter saved in My Library. Click to remove." : "Save chapter to My Library for quick access"}
+              >
+                <Bookmark className={cn(
+                  "w-4 h-4 md:w-4.5 md:h-4.5 transition-transform",
+                  isBookmarked ? "fill-amber-500 text-amber-500 scale-110" : "text-gray-400"
+                )} />
+                <span>{isBookmarked ? 'Saved in My Library' : 'Bookmark Chapter'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/library')}
+                className="text-xs font-semibold text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 transition-colors py-1"
+              >
+                <span>View My Library ({libraryCount})</span>
+              </button>
+            </div>
+
             <p className="mt-3 text-sm md:hidden bg-blue-50 text-blue-700 px-3 py-2 rounded-lg border border-blue-100 font-medium flex items-center gap-2">
               <span className="text-lg">💡</span> For the best reading experience, we recommend switching to "Desktop site" in your browser menu.
             </p>
@@ -446,6 +548,20 @@ export default function Reader() {
              </button>
           ) : <div />}
         </div>
+
+        {/* Floating Bookmark Toast */}
+        {bookmarkToast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-semibold border border-gray-700 animate-in fade-in slide-in-from-bottom-3 duration-200">
+            <Bookmark className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />
+            <span>{bookmarkToast}</span>
+            <button
+              onClick={() => navigate('/library')}
+              className="ml-2 text-xs text-amber-300 hover:text-amber-200 underline font-bold"
+            >
+              Open Library
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

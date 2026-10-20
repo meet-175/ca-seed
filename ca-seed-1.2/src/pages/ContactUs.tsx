@@ -5,7 +5,7 @@ import { Mail, MapPin } from 'lucide-react';
 export default function ContactUs() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <Helmet><title>Contact Us - CA Seed</title></Helmet>
+      <Helmet><title>Contact Us - Chartered Seeds</title></Helmet>
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12">

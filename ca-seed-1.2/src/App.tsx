@@ -17,6 +17,8 @@ import Disclaimer from './pages/Disclaimer';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ContentTester from './pages/ContentTester';
+import MyLibrary from './pages/MyLibrary';
+import AntiScreenshotShield from './components/AntiScreenshotShield';
 
 export default function App() {
   useEffect(() => {
@@ -65,11 +67,13 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
+        <AntiScreenshotShield />
         <div className="flex flex-col min-h-screen">
           <div className="flex-1">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/library" element={<MyLibrary />} />
               <Route path="/level/:levelId" element={<Level />} />
               {/* New Cleaner URL Route */}
               <Route path="/study/:levelId/:subjectSlug/:chapterSlug" element={<Reader />} />
@@ -154,10 +158,10 @@ export default function App() {
                 <div className="flex flex-col justify-center leading-none">
                   <div className="flex items-baseline gap-1">
                     <span className="text-xl font-extrabold tracking-tight text-gray-900">
-                      CA
+                      Chartered
                     </span>
                     <span className="text-xl font-extrabold tracking-tight text-purple-700">
-                      Seed
+                      Seeds
                     </span>
                   </div>
                   <span className="text-[10px] font-semibold tracking-wider uppercase mt-0.5 text-gray-500">
@@ -174,7 +178,7 @@ export default function App() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-500">
-                  &copy; {new Date().getFullYear()} CA Seed. All rights reserved.
+                  &copy; {new Date().getFullYear()} Chartered Seeds. All rights reserved.
                 </p>
                 <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">
                   Reproduction or copying of content is strictly prohibited.
