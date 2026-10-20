@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Bookmark, BookmarkCheck } from 'lucide-react';
@@ -27,6 +27,8 @@ const remarkReplaceRupee = () => {
   };
 };
 import Header from '../components/Header';
+import AdUnit from '../components/AdUnit';
+import { ADS_CONFIG } from '../config/ads';
 import { contentStore, ContentItem } from '../content/store';
 import { SYLLABUS } from '../data/syllabus';
 
@@ -48,6 +50,75 @@ const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: 
 
   const injectedHtml = useMemo(() => {
     if (!isHtmlContent) return '';
+
+    const getInjectedQuestionAd = (adIndex: number) => {
+      const isAdSense = Boolean(ADS_CONFIG.clientId && ADS_CONFIG.clientId.startsWith('ca-pub-'));
+      if (isAdSense) {
+        return `
+          <div class="cs-injected-question-ad" style="margin: 36px 0; clear: both; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 12px 12px 0 0; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; user-select: none;">
+              <span>ADVERTISEMENT</span>
+              <span style="font-size: 9px; opacity: 0.8;">In-Question Break</span>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; padding: 12px; text-align: center; min-height: 100px;">
+              <ins class="adsbygoogle"
+                   style="display:block; text-align:center;"
+                   data-ad-layout="in-article"
+                   data-ad-format="fluid"
+                   data-ad-client="${ADS_CONFIG.clientId}"
+                   data-ad-slot="question-break-${adIndex}"></ins>
+              <script>(window.adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="cs-injected-question-ad" style="margin: 36px 0; clear: both; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 12px 12px 0 0; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; user-select: none;">
+            <span>ADVERTISEMENT</span>
+            <span style="font-size: 9px; opacity: 0.8;">In-Question Break</span>
+          </div>
+          <div style="background: linear-gradient(135deg, #0f172a 0%, #3b0764 50%, #1e1b4b 100%); color: #ffffff; border: 1px solid rgba(147, 51, 234, 0.4); border-radius: 0 0 12px 12px; padding: 18px 22px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07); display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 14px; min-width: 250px; flex: 1;">
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(147, 51, 234, 0.35); border: 1px solid rgba(168, 85, 247, 0.4); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                ✨
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                  <span style="background: #fbbf24; color: #3b0764; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Featured Partner</span>
+                  <span style="font-size: 11px; color: #cbd5e1;">All India CA Test Series</span>
+                </div>
+                <div style="font-size: 14px; font-weight: 700; color: #ffffff; line-height: 1.35;">
+                  Practice Exam-Pattern Questions with Step-by-Step Evaluated Answers
+                </div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                  Benchmark your preparation against ICAI suggested answers and ranker notes.
+                </div>
+              </div>
+            </div>
+            <div>
+              <a href="#" onclick="window.top.location.href='/library'; return false;" style="display: inline-block; background: #ffffff; color: #3b0764; font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap;">
+                Open Library →
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // Find questions starting with <h3> tag and inject an ad after every 2 questions
+    let processedBody = item.body;
+    let questionH3Count = 0;
+    processedBody = processedBody.replace(/(<h3\b[^>]*>)/gi, (match) => {
+      questionH3Count++;
+      // Inject ad after every 2 questions (before question 3, 5, 7, 9...)
+      if (questionH3Count > 1 && (questionH3Count - 1) % 2 === 0) {
+        return getInjectedQuestionAd(Math.floor(questionH3Count / 2)) + match;
+      }
+      return match;
+    });
+
     const injection = `
       <style>
         body, body * {
@@ -122,27 +193,43 @@ const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: 
       </script>
       <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     `;
-    if (item.body.toLowerCase().includes('</head>')) {
-      return item.body.replace(/<\/head>/i, `${injection}</head>`);
+    if (processedBody.toLowerCase().includes('</head>')) {
+      return processedBody.replace(/<\/head>/i, `${injection}</head>`);
     }
-    return `<head>${injection}</head>${item.body}`;
+    return `<head>${injection}</head>${processedBody}`;
   }, [item, isHtmlContent]);
 
   useEffect(() => {
     if (iframeRef.current && isHtmlContent) {
-      const handleLoad = () => {
+      const updateHeight = () => {
         if (iframeRef.current?.contentWindow) {
-          iframeRef.current.style.height = '800px'; 
           try {
-            const height = iframeRef.current.contentWindow.document.documentElement.scrollHeight;
-            iframeRef.current.style.height = `${height}px`;
+            const doc = iframeRef.current.contentWindow.document;
+            const height = Math.max(
+              doc.body?.scrollHeight || 0,
+              doc.documentElement?.scrollHeight || 0
+            );
+            if (height > 100) {
+              iframeRef.current.style.height = `${height + 60}px`;
+            }
           } catch (e) {}
         }
       };
-      iframeRef.current.addEventListener('load', handleLoad);
-      return () => iframeRef.current?.removeEventListener('load', handleLoad);
+
+      const handleLoad = () => {
+        updateHeight();
+        setTimeout(updateHeight, 400);
+        setTimeout(updateHeight, 1200);
+        setTimeout(updateHeight, 2500);
+      };
+
+      const iframe = iframeRef.current;
+      iframe.addEventListener('load', handleLoad);
+      return () => iframe?.removeEventListener('load', handleLoad);
     }
   }, [item, isHtmlContent]);
+
+  let mdH3Count = 0;
 
   return (
     <div id={config.id} className="scroll-mt-48 mb-16">
@@ -168,6 +255,22 @@ const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: 
             <ReactMarkdown 
               remarkPlugins={[remarkGfm, remarkMath, remarkReplaceRupee]}
               rehypePlugins={[rehypeRaw, [rehypeKatex, { strict: false, throwOnError: false }]]}
+              components={{
+                h3: ({ node, ...props }) => {
+                  mdH3Count++;
+                  const showAd = mdH3Count > 1 && (mdH3Count - 1) % 2 === 0;
+                  return (
+                    <>
+                      {showAd && (
+                        <div className="not-prose my-8">
+                          <AdUnit slot="readerInContent" />
+                        </div>
+                      )}
+                      <h3 {...props} />
+                    </>
+                  );
+                }
+              }}
             >
               {item.body}
             </ReactMarkdown>
@@ -449,104 +552,154 @@ export default function Reader() {
         </div>
       </div>
 
-      <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">
         
-        {/* Title, Bookmark & Share */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight max-w-3xl">
-              {chapter}
-            </h1>
+        {/* Placement 1: Top High-Viewability Leaderboard Banner */}
+        <AdUnit slot="readerTopLeaderboard" className="mb-6" />
 
-            {/* Quick Actions Bar: Bookmark Button & My Library Link */}
-            <div className="flex items-center gap-3 mt-3.5 flex-wrap">
-              <button
-                type="button"
-                onClick={handleToggleBookmark}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all border shadow-sm cursor-pointer",
-                  isBookmarked
-                    ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/25"
-                    : "bg-white hover:bg-purple-50 text-gray-700 hover:text-purple-800 border-gray-200 hover:border-purple-200"
-                )}
-                title={isBookmarked ? "Chapter saved in My Library. Click to remove." : "Save chapter to My Library for quick access"}
-              >
-                <Bookmark className={cn(
-                  "w-4 h-4 md:w-4.5 md:h-4.5 transition-transform",
-                  isBookmarked ? "fill-amber-500 text-amber-500 scale-110" : "text-gray-400"
-                )} />
-                <span>{isBookmarked ? 'Saved in My Library' : 'Bookmark Chapter'}</span>
-              </button>
+        {/* Desktop Split Grid: Reading Content + Sticky Monetization Rail */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Main Reading Column */}
+          <div className="lg:col-span-8 w-full min-w-0">
+            {/* Title, Bookmark & Share */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight max-w-3xl">
+                  {chapter}
+                </h1>
 
-              <button
-                type="button"
-                onClick={() => navigate('/library')}
-                className="text-xs font-semibold text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 transition-colors py-1"
-              >
-                <span>View My Library ({libraryCount})</span>
-              </button>
+                {/* Quick Actions Bar: Bookmark Button & My Library Link */}
+                <div className="flex items-center gap-3 mt-3.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleToggleBookmark}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all border shadow-sm cursor-pointer",
+                      isBookmarked
+                        ? "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/25"
+                        : "bg-white hover:bg-purple-50 text-gray-700 hover:text-purple-800 border-gray-200 hover:border-purple-200"
+                    )}
+                    title={isBookmarked ? "Chapter saved in My Library. Click to remove." : "Save chapter to My Library for quick access"}
+                  >
+                    <Bookmark className={cn(
+                      "w-4 h-4 md:w-4.5 md:h-4.5 transition-transform",
+                      isBookmarked ? "fill-amber-500 text-amber-500 scale-110" : "text-gray-400"
+                    )} />
+                    <span>{isBookmarked ? 'Saved in My Library' : 'Bookmark Chapter'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/library')}
+                    className="text-xs font-semibold text-purple-700 hover:text-purple-900 hover:underline flex items-center gap-1 transition-colors py-1"
+                  >
+                    <span>View My Library ({libraryCount})</span>
+                  </button>
+                </div>
+
+                <p className="mt-3 text-sm md:hidden bg-blue-50 text-blue-700 px-3 py-2 rounded-lg border border-blue-100 font-medium flex items-center gap-2">
+                  <span className="text-lg">💡</span> For the best reading experience, we recommend switching to "Desktop site" in your browser menu.
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-3 shrink-0 pt-1">
+                <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Share:</span>
+                {renderShareButtons()}
+              </div>
             </div>
 
-            <p className="mt-3 text-sm md:hidden bg-blue-50 text-blue-700 px-3 py-2 rounded-lg border border-blue-100 font-medium flex items-center gap-2">
-              <span className="text-lg">💡</span> For the best reading experience, we recommend switching to "Desktop site" in your browser menu.
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3 shrink-0 pt-1">
-            <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Share:</span>
-            {renderShareButtons()}
-          </div>
-        </div>
+            {/* Content Sections */}
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
+              </div>
+            ) : activeSections.length > 0 ? (
+              <div className="space-y-6">
+                {activeSections.map(({ config, item }, index) => (
+                  <React.Fragment key={config.id}>
+                    <ContentSection item={item!} config={config} chapter={chapter} isAdmin={!!user} onDelete={handleDeleteArticle} />
+                    
+                    {/* Placement 2: High CTR In-Content Native Ad between Section 1 & 2 */}
+                    {index === 0 && activeSections.length > 1 && (
+                      <AdUnit slot="readerInContent" className="my-8" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
+                <p className="text-gray-800 font-medium mb-2">No content available</p>
+                <p className="text-gray-500 text-sm leading-relaxed max-w-lg mx-auto">
+                  We couldn't find any study materials for <strong className="text-gray-700 font-semibold">{chapter}</strong>. If you are an admin, please upload the content via the Content Upload Portal.
+                </p>
+              </div>
+            )}
 
-        {/* Content Sections */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
-          </div>
-        ) : activeSections.length > 0 ? (
-          <div className="space-y-4">
-            {activeSections.map(({ config, item }) => (
-              <ContentSection key={config.id} item={item!} config={config} chapter={chapter} isAdmin={!!user} onDelete={handleDeleteArticle} />
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
-            <p className="text-gray-800 font-medium mb-2">No content available</p>
-            <p className="text-gray-500 text-sm leading-relaxed max-w-lg mx-auto">
-              We couldn't find any study materials for <strong className="text-gray-700 font-semibold">{chapter}</strong>. If you are an admin, please upload the content via the Content Upload Portal.
-            </p>
-          </div>
-        )}
+            {/* Placement 3: Bottom High-Impact Billboard Ad */}
+            {activeSections.length > 0 && (
+              <AdUnit slot="readerBottomBanner" className="mt-8 mb-4" />
+            )}
 
-        {/* Bottom Share */}
-        {activeSections.length > 0 && (
-          <div className="mt-8 flex items-center justify-center gap-3">
-             <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Share:</span>
-             {renderShareButtons()}
+            {/* Bottom Share */}
+            {activeSections.length > 0 && (
+              <div className="mt-6 flex items-center justify-center gap-3">
+                 <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Share:</span>
+                 {renderShareButtons()}
+              </div>
+            )}
+
+            {/* Prev / Next Pagination */}
+            <div className="mt-10 flex items-center justify-between border-t border-gray-200 pt-8 mb-12">
+              {prevChapter ? (
+                <button 
+                  onClick={() => handleNavigateChapter(prevChapter)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Prev Chapter
+                </button>
+              ) : <div />}
+
+              {nextChapter ? (
+                 <button 
+                   onClick={() => handleNavigateChapter(nextChapter)}
+                   className="flex items-center gap-2 px-6 py-2.5 bg-[#9333ea] hover:bg-[#7e22ce] text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                 >
+                   Next Chapter
+                   <ChevronRight className="w-4 h-4" />
+                 </button>
+              ) : <div />}
+            </div>
           </div>
-        )}
 
-        {/* Prev / Next Pagination */}
-        <div className="mt-12 flex items-center justify-between border-t border-gray-200 pt-8 mb-12">
-          {prevChapter ? (
-            <button 
-              onClick={() => handleNavigateChapter(prevChapter)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Prev Chapter
-            </button>
-          ) : <div />}
+          {/* Placement 4: Sticky Monetization Sidebar Rail (Desktop) */}
+          <aside className="hidden lg:block lg:col-span-4 sticky top-24 space-y-6">
+            {/* Quick Section Navigator Card */}
+            {activeSections.length > 1 && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-purple-600" />
+                  <span>On This Page</span>
+                </h3>
+                <nav className="space-y-1.5">
+                  {activeSections.map(({ config }) => (
+                    <button
+                      key={config.id}
+                      onClick={() => scrollToSection(config.id)}
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:text-purple-700 hover:bg-purple-50 transition-colors flex items-center justify-between group"
+                    >
+                      <span className="truncate">{config.type}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            )}
 
-          {nextChapter ? (
-             <button 
-               onClick={() => handleNavigateChapter(nextChapter)}
-               className="flex items-center gap-2 px-6 py-2.5 bg-[#9333ea] hover:bg-[#7e22ce] text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
-             >
-               Next Chapter
-               <ChevronRight className="w-4 h-4" />
-             </button>
-          ) : <div />}
+            {/* High CPM 300x600 Half-Page Sticky Rail Ad */}
+            <AdUnit slot="readerStickySidebar" />
+          </aside>
         </div>
 
         {/* Floating Bookmark Toast */}

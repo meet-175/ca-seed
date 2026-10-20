@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
+import AdUnit from '../components/AdUnit';
 import { contentStore, ContentItem } from '../content/store';
 import { Bell, Calendar, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -55,6 +56,9 @@ export default function News() {
             <p className="text-gray-500 font-medium mt-1">Latest announcements, study materials, and exam schedules.</p>
           </div>
         </div>
+
+        {/* Top High-Traffic News Banner */}
+        <AdUnit slot="newsTopBanner" className="mb-8" />
 
         {isLoading ? (
           <div className="text-center py-20 text-gray-500 bg-white rounded-3xl border border-gray-100 shadow-sm">

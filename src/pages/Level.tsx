@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
+import AdUnit from '../components/AdUnit';
 import { contentStore, ContentItem } from '../content/store';
 import { ArrowLeft, Search, ChevronDown, MessageCircle, Send, Link as LinkIcon, FileText, HelpCircle, CheckSquare, Activity } from 'lucide-react';
 import { SYLLABUS } from '../data/syllabus';
@@ -161,6 +162,9 @@ export default function Level() {
           </div>
         )}
 
+        {/* Catalog High-Yield Leaderboard Ad */}
+        <AdUnit slot="levelTopLeaderboard" className="mb-8" />
+
         {/* Chapters Accordion */}
         {currentSubjectData && (
           <div className="space-y-6">
@@ -248,6 +252,9 @@ export default function Level() {
                                   </div>
                                 </div>
 
+                                {/* In-Between Dropdown Sponsor Ad Unit */}
+                                <AdUnit slot="chapterDropdownInBetween" className="my-1" />
+
                                 {/* MCQ Bank Card */}
                                 {formattedLevelName !== 'CA Foundation' && (
                                   <div 
@@ -292,6 +299,9 @@ export default function Level() {
             })}
           </div>
         )}
+
+        {/* In-Feed Chapter Directory Ad */}
+        <AdUnit slot="levelInFeed" className="mt-10" />
       </main>
     </div>
   );

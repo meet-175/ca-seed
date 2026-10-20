@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
+import AdUnit from '../components/AdUnit';
 import GlobalSearchBar from '../components/GlobalSearchBar';
 import { 
   ChevronDown, 
@@ -65,7 +66,7 @@ export default function Home() {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "Chartered Seeds",
-            "url": "https://ca-seed.pages.dev/",
+            "url": "https://chartered-seed.online/",
             "description": "Premium study materials, notes, and question banks for CA Foundation, Intermediate, and Final students.",
             "publisher": {
               "@type": "Organization",
@@ -254,6 +255,11 @@ export default function Home() {
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
+        </div>
+
+        {/* High-Impact Homepage Billboard Banner */}
+        <div className="mt-16">
+          <AdUnit slot="homeBillboard" />
         </div>
       </section>
 

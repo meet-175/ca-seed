@@ -7,7 +7,7 @@ import { slugify } from '../src/lib/slugs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const BASE_URL = 'https://ca-seed.pages.dev';
+const BASE_URL = 'https://chartered-seed.online';
 
 // Map SYLLABUS keys to URL level IDs
 const LEVEL_MAP: Record<string, string> = {
