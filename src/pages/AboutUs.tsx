@@ -5,12 +5,12 @@ import { BookOpen, Target, Users } from 'lucide-react';
 export default function AboutUs() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <Helmet><title>About Us - CA Seed</title></Helmet>
+      <Helmet><title>About Us - Chartered Seeds</title></Helmet>
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12">
           <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">About CA Seed</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">About Chartered Seeds</h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Empowering CA students with high-quality, accessible study materials and exam resources.
             </p>
@@ -42,9 +42,9 @@ export default function AboutUs() {
           
           <div className="markdown-body">
             <h2>Our Story</h2>
-            <p>Preparing for Chartered Accountancy exams is notoriously challenging. With vast syllabuses and complex topics, students often spend more time organizing their materials than actually studying them. CA Seed was born out of a desire to solve this exact problem.</p>
+            <p>Preparing for Chartered Accountancy exams is notoriously challenging. With vast syllabuses and complex topics, students often spend more time organizing their materials than actually studying them. Chartered Seeds was born out of a desire to solve this exact problem.</p>
             <p>Our platform consolidates everything a CA student needs—from concise study notes to comprehensive question banks and real-time news updates—into one clean, distraction-free environment.</p>
-            <p>Whether you are taking your first steps in CA Foundation, or preparing for the rigorous CA Final, CA Seed is here to support your academic journey.</p>
+            <p>Whether you are taking your first steps in CA Foundation, or preparing for the rigorous CA Final, Chartered Seeds is here to support your academic journey.</p>
           </div>
         </div>
       </main>

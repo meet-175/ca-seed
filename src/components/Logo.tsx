@@ -78,7 +78,7 @@ export default function Logo({
         </svg>
       </div>
 
-      {/* Typography: CA Seed & Tagline */}
+      {/* Typography: Chartered Seeds & Tagline */}
       <div className="flex flex-col justify-center leading-none">
         <div className="flex items-baseline gap-1">
           <span
@@ -86,14 +86,14 @@ export default function Logo({
               isWhite ? 'text-white' : 'text-gray-900'
             }`}
           >
-            CA
+            Chartered
           </span>
           <span
             className={`text-xl font-extrabold tracking-tight ${
               isWhite ? 'text-emerald-300' : 'text-purple-700'
             }`}
           >
-            Seed
+            Seeds
           </span>
         </div>
         {showTagline && (

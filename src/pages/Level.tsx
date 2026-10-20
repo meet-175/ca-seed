@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
@@ -10,6 +10,7 @@ import { slugify } from '../lib/slugs';
 
 export default function Level() {
   const { levelId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Normalized level name for matching
   const formattedLevelName = useMemo(() => {
@@ -21,15 +22,33 @@ export default function Level() {
 
   const levelSyllabus = SYLLABUS[formattedLevelName] || [];
 
-  const [selectedSubject, setSelectedSubject] = useState<string>(levelSyllabus[0]?.name || '');
+  const subjectParam = searchParams.get('subject');
+  const initialSubject = useMemo(() => {
+    if (subjectParam && levelSyllabus.length > 0) {
+      const found = levelSyllabus.find(s => slugify(s.name) === subjectParam || s.name.toLowerCase() === subjectParam.toLowerCase());
+      if (found) return found.name;
+    }
+    return levelSyllabus[0]?.name || '';
+  }, [subjectParam, levelSyllabus]);
+
+  const [selectedSubject, setSelectedSubject] = useState<string>(initialSubject);
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [levelContent, setLevelContent] = useState<ContentItem[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Reset selections on level change
-    setSelectedSubject(levelSyllabus[0]?.name || '');
+    const paramSubject = searchParams.get('subject');
+    if (paramSubject && levelSyllabus.length > 0) {
+      const found = levelSyllabus.find(s => slugify(s.name) === paramSubject || s.name.toLowerCase() === paramSubject.toLowerCase());
+      if (found) {
+        setSelectedSubject(found.name);
+      } else {
+        setSelectedSubject(levelSyllabus[0]?.name || '');
+      }
+    } else {
+      setSelectedSubject(levelSyllabus[0]?.name || '');
+    }
     setExpandedChapter(null);
     setSearchQuery('');
     
@@ -38,7 +57,7 @@ export default function Level() {
         setLevelContent(items);
       });
     }
-  }, [levelId, formattedLevelName, levelSyllabus]);
+  }, [levelId, formattedLevelName, levelSyllabus, searchParams]);
 
   const currentSubjectData = levelSyllabus.find(s => s.name === selectedSubject);
 
@@ -67,20 +86,20 @@ export default function Level() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
       <Helmet>
-        <title>{formattedLevelName ? `${formattedLevelName} Study Material - CA Seed` : 'Level - CA Seed'}</title>
+        <title>{formattedLevelName ? `${formattedLevelName} Study Material - Chartered Seeds` : 'Level - Chartered Seeds'}</title>
         <meta name="description" content={`Access free study notes, question banks, and solutions for ${formattedLevelName}.`} />
-        <meta property="og:title" content={formattedLevelName ? `${formattedLevelName} Study Material - CA Seed` : 'Level - CA Seed'} />
+        <meta property="og:title" content={formattedLevelName ? `${formattedLevelName} Study Material - Chartered Seeds` : 'Level - Chartered Seeds'} />
         <meta property="og:description" content={`Access free study notes, question banks, and solutions for ${formattedLevelName}.`} />
         {formattedLevelName && (
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
               "@type": "CollectionPage",
-              "name": `${formattedLevelName} Study Material - CA Seed`,
+              "name": `${formattedLevelName} Study Material - Chartered Seeds`,
               "description": `Access free study notes, question banks, and solutions for ${formattedLevelName}.`,
               "publisher": {
                 "@type": "Organization",
-                "name": "CA Seed"
+                "name": "Chartered Seeds"
               }
             })}
           </script>
@@ -133,6 +152,7 @@ export default function Level() {
                 )}
                 onClick={() => {
                   setSelectedSubject(subject.name);
+                  setSearchParams({ subject: slugify(subject.name) });
                 }}
               >
                 {subject.name}
@@ -229,18 +249,20 @@ export default function Level() {
                                 </div>
 
                                 {/* MCQ Bank Card */}
-                                <div 
-                                  onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
-                                  className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
-                                >
-                                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                                    <CheckSquare className="w-6 h-6" />
+                                {formattedLevelName !== 'CA Foundation' && (
+                                  <div 
+                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
+                                    className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
+                                  >
+                                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                                      <CheckSquare className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Multiple Choice</h4>
+                                      <p className="text-xs md:text-sm text-gray-500">Test your knowledge with MCQs</p>
+                                    </div>
                                   </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Multiple Choice</h4>
-                                    <p className="text-xs md:text-sm text-gray-500">Test your knowledge with MCQs</p>
-                                  </div>
-                                </div>
+                                )}
                                 
                                 {/* Question Diagnosis Card */}
                                 {!(formattedLevelName === 'CA Intermediate' && (selectedSubject === 'Advanced Accounting' || selectedSubject === 'Taxation')) && (

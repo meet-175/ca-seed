@@ -4,7 +4,7 @@ import Header from '../components/Header';
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <Helmet><title>Privacy Policy - CA Seed</title></Helmet>
+      <Helmet><title>Privacy Policy - Chartered Seeds</title></Helmet>
       <Header />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12 markdown-body">
@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
           <p>Last updated: {new Date().toLocaleDateString()}</p>
           
           <h2>1. Introduction</h2>
-          <p>Welcome to CA Seed. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.</p>
+          <p>Welcome to Chartered Seeds. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.</p>
           
           <h2>2. Information We Collect</h2>
           <p>We may collect information about you in a variety of ways. The information we may collect on the Site includes derivative data such as your IP address, your browser type, your operating system, your access times, and the pages you have viewed directly before and after accessing the Site.</p>

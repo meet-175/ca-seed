@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
+import GlobalSearchBar from '../components/GlobalSearchBar';
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -13,11 +14,14 @@ import {
   Target, 
   ArrowRight,
   Info,
-  Bell
+  Bell,
+  Bookmark
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useBookmarks } from '../lib/libraryStore';
 
 export default function Home() {
+  const { count: libraryCount } = useBookmarks();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -49,23 +53,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
       <Helmet>
-        <title>CA Seed - Complete Study Material & Question Banks for CA Exams</title>
+        <title>Chartered Seeds - Complete Study Material & Question Banks for CA Exams</title>
         <meta name="description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
-        <meta property="og:title" content="CA Seed - Complete Study Material & Question Banks" />
+        <meta property="og:title" content="Chartered Seeds - Complete Study Material & Question Banks" />
         <meta property="og:description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
         <meta property="og:type" content="website" />
-        <meta name="twitter:title" content="CA Seed - Complete Study Material & Question Banks" />
+        <meta name="twitter:title" content="Chartered Seeds - Complete Study Material & Question Banks" />
         <meta name="twitter:description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "name": "CA Seed",
+            "name": "Chartered Seeds",
             "url": "https://ca-seed.pages.dev/",
             "description": "Premium study materials, notes, and question banks for CA Foundation, Intermediate, and Final students.",
             "publisher": {
               "@type": "Organization",
-              "name": "CA Seed"
+              "name": "Chartered Seeds"
             }
           })}
         </script>
@@ -92,9 +96,12 @@ export default function Home() {
             <span style={{ color: '#ff7043' }}>Chartered Accountancy</span>
           </h1>
           
-          <p className="mt-6 text-lg md:text-xl text-white/80 max-w-2xl font-light mb-12">
+          <p className="mt-6 text-lg md:text-xl text-white/80 max-w-2xl font-light mb-8">
             Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final.
           </p>
+
+          {/* Global Search Bar */}
+          <GlobalSearchBar />
 
           <div className="relative mb-12 flex flex-col items-center">
             <button
@@ -122,7 +129,7 @@ export default function Home() {
 
           <div className="flex flex-col items-center gap-4">
             <p className="text-white/60 text-xs font-semibold tracking-widest uppercase">
-              Share CA Seed
+              Share Chartered Seeds
             </p>
             <div className="flex items-center gap-4">
               <button 
@@ -162,6 +169,30 @@ export default function Home() {
             <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-1 bg-red-600 rounded-full" />
           </h2>
         </div>
+        {libraryCount > 0 && (
+          <div className="mb-12 max-w-4xl mx-auto p-5 bg-gradient-to-r from-purple-50 via-white to-amber-50 border border-purple-200/80 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-purple-700 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Bookmark className="w-6 h-6 fill-amber-300 text-amber-300" />
+              </div>
+              <div className="text-left">
+                <h4 className="font-extrabold text-gray-900 text-base">
+                  Continue where you left off
+                </h4>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  You have <strong className="text-purple-700">{libraryCount} saved chapter{libraryCount > 1 ? 's' : ''}</strong> in My Library for fast revision.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/library"
+              className="flex items-center gap-1.5 px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-sm hover:shadow shrink-0"
+            >
+              <span>Open My Library</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Foundation Card */}
@@ -233,17 +264,17 @@ export default function Home() {
             <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
               <Info className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">About CA Seed</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">About Chartered Seeds</h2>
           </div>
           <div className="space-y-6 text-gray-600 font-medium leading-relaxed text-lg">
             <p>
-              Welcome to CA Seed, your most trusted partner in the journey of becoming a Chartered Accountant. We believe that high-quality education should be accessible to everyone, which is why we've created a comprehensive repository of study materials, notes, and question banks.
+              Welcome to Chartered Seeds, your most trusted partner in the journey of becoming a Chartered Accountant. We believe that high-quality education should be accessible to everyone, which is why we've created a comprehensive repository of study materials, notes, and question banks.
             </p>
             <p>
-              Navigating the vast syllabus of CA Foundation, Intermediate, and Final can be overwhelming. CA Seed aims to simplify this process by organizing content logically, ensuring you can find exactly what you need, exactly when you need it. From the latest taxation limits to detailed accounting standard summaries, we keep our content updated in alignment with the ICAI syllabus.
+              Navigating the vast syllabus of CA Foundation, Intermediate, and Final can be overwhelming. Chartered Seeds aims to simplify this process by organizing content logically, ensuring you can find exactly what you need, exactly when you need it. From the latest taxation limits to detailed accounting standard summaries, we keep our content updated in alignment with the ICAI syllabus.
             </p>
             <p>
-              Whether you're starting your journey with CA Foundation or in the final stretch of your CA Final preparations, CA Seed is here to plant the seeds of your success. Start exploring our resources today and take a confident step towards your professional goals.
+              Whether you're starting your journey with CA Foundation or in the final stretch of your CA Final preparations, Chartered Seeds is here to plant the seeds of your success. Start exploring our resources today and take a confident step towards your professional goals.
             </p>
             <div className="mt-8 p-6 bg-purple-50 rounded-2xl text-purple-900 italic font-semibold border border-purple-100">
               "Our comprehensive question bank is meticulously curated based on Revision Test Papers (RTP), Mock Test Papers (MTP), and Previous Year Questions (PYQ) spanning from the May 2018 attempt to the latest attempt."

@@ -9,7 +9,9 @@ service cloud.firestore {
 
     // Admin Check
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'meetp8697@gmail.com';
+      return request.auth != null && (
+        request.auth.token.email.lower() == 'meetp8697@gmail.com'
+      );
     }
 
     function isValidId(id) {
@@ -26,13 +28,12 @@ service cloud.firestore {
 
     function isValidContentItem(data) {
       return data.keys().hasAll(['id', 'level', 'subject', 'chapter', 'contentType', 'body', 'createdAt'])
-        && data.keys().size() == 7
-        && data.id is string && data.id.size() <= 100
-        && data.level is string && data.level.size() <= 50
-        && data.subject is string && data.subject.size() <= 150
-        && data.chapter is string && data.chapter.size() <= 150
-        && data.contentType is string && data.contentType.size() <= 50
-        && data.body is string && data.body.size() <= 500000 // Allow up to ~500KB of HTML/LaTeX
+        && data.id is string && data.id.size() <= 128
+        && data.level is string && data.level.size() <= 100
+        && data.subject is string && data.subject.size() <= 250
+        && data.chapter is string && data.chapter.size() <= 500
+        && data.contentType is string && data.contentType.size() <= 100
+        && data.body is string && data.body.size() <= 1048576 // Support up to 1MB of HTML/LaTeX
         && data.createdAt is number;
     }
 
@@ -43,9 +44,7 @@ service cloud.firestore {
       
       allow create: if isAdmin() && isValidId(contentId) && isValidContentItem(incoming());
       
-      allow update: if true && isValidId(contentId) && isValidContentItem(incoming()) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['level', 'subject', 'chapter', 'contentType', 'body', 'createdAt'])
-      );
+      allow update: if isAdmin() && isValidId(contentId) && isValidContentItem(incoming());
       
       allow delete: if isAdmin();
     }

@@ -42,7 +42,7 @@ export default function ContentTester() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Helmet>
-        <title>Content Tester - CA Seed</title>
+        <title>Content Tester - Chartered Seeds</title>
       </Helmet>
       <Header />
       

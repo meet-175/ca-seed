@@ -1,11 +1,15 @@
+import { Bookmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { useBookmarks } from '../lib/libraryStore';
 
 interface HeaderProps {
   className?: string;
 }
 
 export default function Header({ className }: HeaderProps) {
+  const { count } = useBookmarks();
+
   return (
     <header className={cn("flex items-center justify-between px-6 py-3.5 bg-[#7e22ce] text-white shrink-0 shadow-sm", className)}>
       <Link to="/" className="group flex items-center gap-3 select-none hover:opacity-95 transition-opacity">
@@ -77,10 +81,10 @@ export default function Header({ className }: HeaderProps) {
         <div className="flex flex-col justify-center leading-none">
           <div className="flex items-baseline gap-1">
             <span className="text-xl font-extrabold tracking-tight text-white">
-              CA
+              Chartered
             </span>
             <span className="text-xl font-extrabold tracking-tight text-emerald-300">
-              Seed
+              Seeds
             </span>
           </div>
           <span className="text-[10px] font-semibold tracking-wider uppercase mt-0.5 text-purple-200">
@@ -88,6 +92,22 @@ export default function Header({ className }: HeaderProps) {
           </span>
         </div>
       </Link>
+
+      <div className="flex items-center gap-2.5">
+        <Link 
+          to="/library" 
+          className="flex items-center gap-1.5 px-3 py-1.5 md:px-3.5 md:py-2 bg-white/10 hover:bg-white/20 rounded-full text-xs md:text-sm font-medium transition-colors border border-white/15"
+          title="Open My Library of Saved Chapters"
+        >
+          <Bookmark className="w-3.5 h-3.5 md:w-4 md:h-4 fill-amber-300 text-amber-300" />
+          <span className="hidden sm:inline">My Library</span>
+          {count > 0 && (
+            <span className="ml-0.5 px-1.5 py-0.2 bg-amber-400 text-purple-950 font-extrabold text-[11px] rounded-full leading-none">
+              {count}
+            </span>
+          )}
+        </Link>
+      </div>
     </header>
   );
 }
