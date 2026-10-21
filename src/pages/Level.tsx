@@ -84,20 +84,46 @@ export default function Level() {
     }
   };
 
+  const levelTitle = useMemo(() => {
+    if (levelId === 'intermediate') {
+      return selectedSubject
+        ? `${selectedSubject} CA Inter Notes & Taxation PYQ - Chartered Seeds`
+        : 'CA Inter Free Study Material, Chapter-Wise Free Notes & PYQ | Chartered Seeds';
+    }
+    if (levelId === 'foundation') {
+      return selectedSubject
+        ? `${selectedSubject} - Free CA Foundation Question Bank & MCQs | Chartered Seeds`
+        : 'Free CA Foundation Question Bank with Answers & Notes | Chartered Seeds';
+    }
+    return selectedSubject
+      ? `${selectedSubject} - CA Final Free Study Material & PYQs | Chartered Seeds`
+      : 'CA Final Free Study Material, Revision Notes & PYQ | Chartered Seeds';
+  }, [levelId, selectedSubject]);
+
+  const levelDescription = useMemo(() => {
+    if (levelId === 'intermediate') {
+      return `Free CA Inter study material for ${selectedSubject || 'all subjects'}. Access chapter-wise free CA Inter notes, CA Inter Taxation PYQ, Advanced Accounting notes, and Corporate & Other Laws summary.`;
+    }
+    if (levelId === 'foundation') {
+      return `Free CA Foundation question bank with answers for ${selectedSubject || 'all papers'}. Practice chapter-wise notes, Business Economics MCQs, and detailed step-by-step solutions.`;
+    }
+    return `Complete CA Final study resources for ${selectedSubject || 'all subjects'}. Practice past year questions (PYQs), RTPs, MTPs, and advanced revision notes.`;
+  }, [levelId, selectedSubject]);
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans">
       <Helmet>
-        <title>{formattedLevelName ? `${formattedLevelName} Study Material - Chartered Seeds` : 'Level - Chartered Seeds'}</title>
-        <meta name="description" content={`Access free study notes, question banks, and solutions for ${formattedLevelName}.`} />
-        <meta property="og:title" content={formattedLevelName ? `${formattedLevelName} Study Material - Chartered Seeds` : 'Level - Chartered Seeds'} />
-        <meta property="og:description" content={`Access free study notes, question banks, and solutions for ${formattedLevelName}.`} />
+        <title>{levelTitle}</title>
+        <meta name="description" content={levelDescription} />
+        <meta property="og:title" content={levelTitle} />
+        <meta property="og:description" content={levelDescription} />
         {formattedLevelName && (
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
               "@type": "CollectionPage",
-              "name": `${formattedLevelName} Study Material - Chartered Seeds`,
-              "description": `Access free study notes, question banks, and solutions for ${formattedLevelName}.`,
+              "name": levelTitle,
+              "description": levelDescription,
               "publisher": {
                 "@type": "Organization",
                 "name": "Chartered Seeds"

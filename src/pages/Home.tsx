@@ -54,24 +54,57 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
       <Helmet>
-        <title>Chartered Seeds - Complete Study Material & Question Banks for CA Exams</title>
-        <meta name="description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
-        <meta property="og:title" content="Chartered Seeds - Complete Study Material & Question Banks" />
-        <meta property="og:description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
+        <title>CA Inter Free Study Material, CA Foundation Question Bank & Notes | Chartered Seeds</title>
+        <meta name="description" content="Access free CA Foundation question bank with answers, chapter-wise free CA Inter notes, CA Inter Taxation PYQ, Advanced Accounting CA Inter notes, and Corporate & Other Laws summary." />
+        <meta name="keywords" content="CA Inter free study material, free CA Foundation question bank with answers, Chapter-wise free CA Inter notes, CA Inter Taxation PYQ, Advanced Accounting CA Inter notes, CA Foundation Business Economics MCQs, Corporate and Other Laws summary notes" />
+        <meta property="og:title" content="CA Inter Free Study Material, CA Foundation Question Bank & Notes | Chartered Seeds" />
+        <meta property="og:description" content="Access free CA Foundation question bank with answers, chapter-wise free CA Inter notes, CA Inter Taxation PYQ, Advanced Accounting CA Inter notes, and Corporate & Other Laws summary." />
         <meta property="og:type" content="website" />
-        <meta name="twitter:title" content="Chartered Seeds - Complete Study Material & Question Banks" />
-        <meta name="twitter:description" content="Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final exams." />
+        <meta name="twitter:title" content="CA Inter Free Study Material, CA Foundation Question Bank & Notes | Chartered Seeds" />
+        <meta name="twitter:description" content="Access free CA Foundation question bank with answers, chapter-wise free CA Inter notes, CA Inter Taxation PYQ, Advanced Accounting CA Inter notes, and Corporate & Other Laws summary." />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "Chartered Seeds",
             "url": "https://chartered-seed.online/",
-            "description": "Premium study materials, notes, and question banks for CA Foundation, Intermediate, and Final students.",
+            "description": "Free CA Inter study material, chapter-wise free CA Inter notes, and free CA Foundation question bank with answers.",
             "publisher": {
               "@type": "Organization",
               "name": "Chartered Seeds"
             }
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Where can I get CA Inter free study material and chapter-wise notes?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Chartered Seeds provides 100% free chapter-wise CA Inter notes, Advanced Accounting study material, Corporate and Other Laws summary notes, and Taxation PYQs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How to access free CA Foundation question bank with answers?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Browse our dedicated CA Foundation portal for complete question banks with verified step-by-step solutions and Business Economics MCQs based on ICAI past papers."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are CA Inter Taxation PYQs and Advanced Accounting notes updated?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, all CA Inter Taxation PYQs, Corporate and Other Laws summaries, and Advanced Accounting question banks reflect the latest ICAI syllabus and statutory updates."
+                }
+              }
+            ]
           })}
         </script>
       </Helmet>
@@ -92,22 +125,70 @@ export default function Home() {
         />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+          {/* High-Intent Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-amber-300 text-xs md:text-sm font-semibold mb-6">
+            <span>✨ Free CA Foundation, Inter & Final Resources</span>
+          </div>
+
           <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-2 leading-tight">
             Your Ultimate Resource for <br />
             <span style={{ color: '#ff7043' }}>Chartered Accountancy</span>
           </h1>
           
-          <p className="mt-6 text-lg md:text-xl text-white/80 max-w-2xl font-light mb-8">
-            Access free, up-to-date study notes, comprehensive question banks, and detailed solutions for CA Foundation, Intermediate, and Final.
+          <p className="mt-4 text-base md:text-xl text-white/90 max-w-2xl font-light mb-8">
+            Access <strong className="font-semibold text-white">CA Inter free study material</strong>, <strong className="font-semibold text-white">free CA Foundation question banks with answers</strong>, and chapter-wise revision notes.
           </p>
 
           {/* Global Search Bar */}
           <GlobalSearchBar />
 
+          {/* High-Value Intent & Subject Keyword Quick Pills */}
+          <div className="mt-4 mb-8 max-w-3xl flex flex-wrap items-center justify-center gap-2 px-2">
+            <span className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1 mr-1">
+              Popular Searches:
+            </span>
+            <Link
+              to="/level/intermediate?subject=taxation"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
+            >
+              CA Inter Taxation PYQ
+            </Link>
+            <Link
+              to="/level/intermediate?subject=advanced-accounting"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
+            >
+              Advanced Accounting CA Inter Notes
+            </Link>
+            <Link
+              to="/level/intermediate?subject=corporate-and-other-laws"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
+            >
+              Corporate & Other Laws Summary
+            </Link>
+            <Link
+              to="/level/foundation?subject=business-economics"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
+            >
+              CA Foundation Business Economics MCQs
+            </Link>
+            <Link
+              to="/level/intermediate"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
+            >
+              Chapter-Wise Free CA Inter Notes
+            </Link>
+            <Link
+              to="/level/foundation"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
+            >
+              Free CA Foundation Question Bank with Answers
+            </Link>
+          </div>
+
           <div className="relative mb-12 flex flex-col items-center">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 px-8 py-3.5 bg-[#d32f2f] hover:bg-red-700 text-white rounded-full font-semibold text-lg transition-colors shadow-lg"
+              className="flex items-center gap-2 px-8 py-3.5 bg-[#d32f2f] hover:bg-red-700 text-white rounded-full font-semibold text-lg transition-colors shadow-lg cursor-pointer"
             >
               Select Your Level
               {isDropdownOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -203,7 +284,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">CA Foundation</h3>
             <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Build a strong base with complete study material and basic accounting concepts.
+              Access <strong className="text-gray-700 font-semibold">free CA Foundation question bank with answers</strong>, chapter-wise notes, and <strong className="text-gray-700 font-semibold">Business Economics MCQs</strong>.
             </p>
             <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-blue-600 transition-colors">
               View Resources
@@ -218,7 +299,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">CA Intermediate</h3>
             <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Dive deeper into Advanced Accounting, Corporate Laws, and new Taxation limits.
+              Get <strong className="text-gray-700 font-semibold">chapter-wise free CA Inter notes</strong>, <strong className="text-gray-700 font-semibold">CA Inter Taxation PYQ</strong>, <strong className="text-gray-700 font-semibold">Advanced Accounting notes</strong>, and Corporate Laws.
             </p>
             <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-purple-600 transition-colors">
               View Resources
@@ -233,7 +314,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">CA Final</h3>
             <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Master complex financial reporting and advanced strategic management.
+              Comprehensive <strong className="text-gray-700 font-semibold">CA Final free study material</strong>, Advanced Auditing, Direct Tax PYQs, and Integrated Business Solutions.
             </p>
             <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-red-500 transition-colors">
               View Resources

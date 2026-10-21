@@ -16,21 +16,28 @@ const LEVEL_MAP: Record<string, string> = {
   'CA Final': 'final',
 };
 
+interface SitemapEntry {
+  loc: string;
+  changefreq: 'daily' | 'weekly' | 'monthly';
+  priority: string;
+}
+
 async function generateSitemap() {
-  const urls: string[] = [
-    '/',
-    '/news',
-    '/about-us',
-    '/contact-us',
-    '/privacy-policy',
-    '/terms-conditions',
-    '/disclaimer',
+  const entries: SitemapEntry[] = [
+    { loc: '/', changefreq: 'daily', priority: '1.0' },
+    { loc: '/library', changefreq: 'weekly', priority: '0.8' },
+    { loc: '/news', changefreq: 'daily', priority: '0.8' },
+    { loc: '/about-us', changefreq: 'monthly', priority: '0.5' },
+    { loc: '/contact-us', changefreq: 'monthly', priority: '0.5' },
+    { loc: '/privacy-policy', changefreq: 'monthly', priority: '0.4' },
+    { loc: '/terms-conditions', changefreq: 'monthly', priority: '0.4' },
+    { loc: '/disclaimer', changefreq: 'monthly', priority: '0.4' },
   ];
 
-  // Add Level pages
+  // Add Level and individual Level/Subject paths
   for (const levelName of Object.keys(LEVEL_MAP)) {
     const levelId = LEVEL_MAP[levelName];
-    urls.push(`/level/${levelId}`);
+    entries.push({ loc: `/level/${levelId}`, changefreq: 'daily', priority: '0.9' });
 
     // Add subject and chapter pages
     const subjects = SYLLABUS[levelName];
@@ -38,10 +45,21 @@ async function generateSitemap() {
       for (const subject of subjects) {
         const subjectSlug = slugify(subject.name);
         
+        // Individual level/subject path
+        entries.push({ 
+          loc: `/level/${levelId}?subject=${encodeURIComponent(subjectSlug)}`, 
+          changefreq: 'daily', 
+          priority: '0.85' 
+        });
+
         for (const section of subject.sections) {
           for (const chapter of section.chapters) {
             const chapterSlug = slugify(chapter);
-            urls.push(`/study/${levelId}/${subjectSlug}/${chapterSlug}`);
+            entries.push({ 
+              loc: `/study/${levelId}/${subjectSlug}/${chapterSlug}`, 
+              changefreq: 'weekly', 
+              priority: '0.8' 
+            });
           }
         }
       }
@@ -50,30 +68,36 @@ async function generateSitemap() {
 
   const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls
+${entries
   .map(
-    (url) => `  <url>
-    <loc>${BASE_URL}${url}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>${url === '/' ? '1.0' : url.startsWith('/study/') ? '0.8' : '0.6'}</priority>
+    (item) => `  <url>
+    <loc>${BASE_URL}${item.loc}</loc>
+    <changefreq>${item.changefreq}</changefreq>
+    <priority>${item.priority}</priority>
   </url>`
   )
   .join('\n')}
-</urlset>`;
+</urlset>
+`;
 
-  // Write to public directory so it gets copied to dist, and also write to dist directly if it exists
+  // Write to public directory (served statically by Vite/Cloudflare Pages)
   const publicDir = path.resolve(__dirname, '../public');
   if (!fs.existsSync(publicDir)) {
     fs.mkdirSync(publicDir, { recursive: true });
   }
-  fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapContent);
+  fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemapContent, 'utf8');
+
+  // Write to project root for direct visibility
+  const rootFile = path.resolve(__dirname, '../sitemap.xml');
+  fs.writeFileSync(rootFile, sitemapContent, 'utf8');
   
+  // Write to dist directly if already built
   const distDir = path.resolve(__dirname, '../dist');
   if (fs.existsSync(distDir)) {
-    fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapContent);
+    fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemapContent, 'utf8');
   }
 
-  console.log(`Sitemap generated with ${urls.length} URLs.`);
+  console.log(`Sitemap generated with ${entries.length} URLs (including /library, level & subject routes).`);
 }
 
 generateSitemap().catch(console.error);

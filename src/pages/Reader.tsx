@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Bookmark, BookmarkCheck } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Trash2, Download, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useBookmarks } from '../lib/libraryStore';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -40,8 +40,19 @@ const SECTION_CONFIG = [
   { id: 'question-diagnosis', type: 'Question Diagnosis', icon: Activity, colorClass: 'bg-emerald-50 text-emerald-600' }
 ];
 
-const ContentSection = ({ item, config, chapter }: { item: ContentItem; config: any; chapter: string; isAdmin?: boolean; onDelete?: (id: string) => void }) => {
+const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: ContentItem; config: any; chapter: string; isAdmin?: boolean; onDelete?: (id: string) => void }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete this ${config.type}?`)) {
+      setIsDeleting(true);
+      if (onDelete) {
+        await onDelete(item.id);
+      }
+      setIsDeleting(false);
+    }
+  };
 
   const isHtmlContent = useMemo(() => {
     const text = item.body.trim().toLowerCase();
@@ -475,21 +486,43 @@ export default function Reader() {
     return { config, item };
   }).filter(section => section.item !== undefined);
 
+  const readerTitle = useMemo(() => {
+    if (!chapter) return 'Free CA Study Material & Question Bank - Chartered Seeds';
+    if (formattedLevelName === 'CA Intermediate') {
+      return `${chapter} - Chapter-Wise Free CA Inter Notes & Question Bank | Chartered Seeds`;
+    }
+    if (formattedLevelName === 'CA Foundation') {
+      return `${chapter} - Free CA Foundation Question Bank with Answers & Notes | Chartered Seeds`;
+    }
+    return `${chapter} - CA Final Free Study Material & PYQs | Chartered Seeds`;
+  }, [chapter, formattedLevelName]);
+
+  const readerDescription = useMemo(() => {
+    if (!chapter || !subject) return 'Access free CA study materials, chapter-wise notes, and question banks.';
+    if (formattedLevelName === 'CA Intermediate') {
+      return `Free CA Inter study material for ${chapter} (${subject}). Study chapter-wise free CA Inter notes, CA Inter Taxation PYQs, Advanced Accounting notes, and practice question bank with answers.`;
+    }
+    if (formattedLevelName === 'CA Foundation') {
+      return `Free CA Foundation question bank with answers for ${chapter} (${subject}). Access chapter-wise notes, Business Economics MCQs, and step-by-step solutions.`;
+    }
+    return `Complete CA Final study material for ${chapter} (${subject}). Download comprehensive notes, case studies, and previous year question bank with answers.`;
+  }, [chapter, subject, formattedLevelName]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Helmet>
-        <title>{chapter ? `${chapter} - Chartered Seeds` : 'Reader - Chartered Seeds'}</title>
-        <meta name="description" content={`Read ${subject} - ${chapter} on Chartered Seeds. Free study materials and resources.`} />
-        <meta property="og:title" content={chapter ? `${chapter} - Chartered Seeds` : 'Reader - Chartered Seeds'} />
-        <meta property="og:description" content={`Read ${subject} - ${chapter} on Chartered Seeds. Free study materials and resources.`} />
+        <title>{readerTitle}</title>
+        <meta name="description" content={readerDescription} />
+        <meta property="og:title" content={readerTitle} />
+        <meta property="og:description" content={readerDescription} />
         <meta property="og:type" content="article" />
         {chapter && subject && (
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Article",
-              "headline": `${chapter} - ${subject}`,
-              "description": `Read ${subject} - ${chapter} on Chartered Seeds. Free study materials and resources.`,
+              "headline": readerTitle,
+              "description": readerDescription,
               "author": {
                 "@type": "Organization",
                 "name": "Chartered Seeds"

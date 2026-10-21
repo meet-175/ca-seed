@@ -2,43 +2,53 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://chartered-seed.online/</loc>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://chartered-seed.online/news</loc>
+    <loc>https://chartered-seed.online/library</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/news</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/about-us</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/contact-us</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/privacy-policy</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/terms-conditions</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/disclaimer</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/level/foundation</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/foundation?subject=accounting</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/foundation/accounting/chapter-1-theoretical-framework</loc>
@@ -94,6 +104,11 @@
     <loc>https://chartered-seed.online/study/foundation/accounting/chapter-11-company-accounts</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/foundation?subject=business-laws</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/foundation/business-laws/chapter-1-indian-regulatory-framework</loc>
@@ -169,6 +184,11 @@
     <loc>https://chartered-seed.online/study/foundation/business-laws/chapter-7-the-negotiable-instruments-act-1881</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/foundation?subject=quantitative-aptitude</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/foundation/quantitative-aptitude/chapter-1-ratio-and-proportion-indices-logarithms</loc>
@@ -261,6 +281,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://chartered-seed.online/level/foundation?subject=business-economics</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://chartered-seed.online/study/foundation/business-economics/chapter-1-nature-scope-of-business-economics</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -312,8 +337,13 @@
   </url>
   <url>
     <loc>https://chartered-seed.online/level/intermediate</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/intermediate?subject=advanced-accounting</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/intermediate/advanced-accounting/chapter-1-introduction-to-accounting-standards</loc>
@@ -496,6 +526,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://chartered-seed.online/level/intermediate?subject=corporate-and-other-laws</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://chartered-seed.online/study/intermediate/corporate-and-other-laws/chapter-1-preliminary</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -569,6 +604,11 @@
     <loc>https://chartered-seed.online/study/intermediate/corporate-and-other-laws/chapter-3-the-foreign-exchange-management-act-1999</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/intermediate?subject=taxation</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/intermediate/taxation/chapter-1-basic-concepts</loc>
@@ -711,6 +751,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://chartered-seed.online/level/intermediate?subject=cost-and-management-accounting</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://chartered-seed.online/study/intermediate/cost-and-management-accounting/chapter-1-introduction-to-cost-and-management-accounting</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -786,6 +831,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://chartered-seed.online/level/intermediate?subject=auditing-and-ethics</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://chartered-seed.online/study/intermediate/auditing-and-ethics/chapter-1-nature-objective-and-scope-of-audit</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -839,6 +889,11 @@
     <loc>https://chartered-seed.online/study/intermediate/auditing-and-ethics/chapter-11-ethics-and-terms-of-audit-engagements</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/intermediate?subject=financial-management-and-strategic-management</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/intermediate/financial-management-and-strategic-management/chapter-1-scope-and-objectives-of-financial-management</loc>
@@ -912,8 +967,13 @@
   </url>
   <url>
     <loc>https://chartered-seed.online/level/final</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/final?subject=financial-reporting</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/final/financial-reporting/chapter-1-introduction-to-indian-accounting-standards</loc>
@@ -1106,6 +1166,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://chartered-seed.online/level/final?subject=advanced-financial-management</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://chartered-seed.online/study/final/advanced-financial-management/chapter-1-financial-policy-and-corporate-strategy</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -1184,6 +1249,11 @@
     <loc>https://chartered-seed.online/study/final/advanced-financial-management/case-study</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/final?subject=advanced-auditing-assurance-and-professional-ethics</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/final/advanced-auditing-assurance-and-professional-ethics/chapter-1-quality-control</loc>
@@ -1284,6 +1354,11 @@
     <loc>https://chartered-seed.online/study/final/advanced-auditing-assurance-and-professional-ethics/case-study</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/final?subject=direct-tax-laws-international-taxation</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/final/direct-tax-laws-international-taxation/chapter-1-basic-concepts</loc>
@@ -1429,6 +1504,11 @@
     <loc>https://chartered-seed.online/study/final/direct-tax-laws-international-taxation/case-study</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/final?subject=indirect-tax-laws</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/final/indirect-tax-laws/chapter-1-supply-under-gst</loc>
@@ -1594,6 +1674,11 @@
     <loc>https://chartered-seed.online/study/final/indirect-tax-laws/case-study</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chartered-seed.online/level/final?subject=integrated-business-solutions</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://chartered-seed.online/study/final/integrated-business-solutions/chapter-1-appointment-and-qualification-of-directors</loc>
