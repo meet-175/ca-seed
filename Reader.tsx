@@ -224,9 +224,9 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
           }
         };
       </script>
-      <link rel="stylesheet" href="/katex/katex.min.css">
-      <script src="/katex/katex.min.js"></script>
-      <script src="/katex/contrib/auto-render.min.js"></script>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
       <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       <script>
         function renderMath() {
