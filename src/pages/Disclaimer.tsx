@@ -22,6 +22,9 @@ export default function Disclaimer() {
           
           <h2>4. External Links Disclaimer</h2>
           <p>The Site may contain links to other websites or content belonging to or originating from third parties. Such external links are not investigated, monitored, or checked for accuracy, adequacy, validity, reliability, availability or completeness by us.</p>
+          
+          <h2>5. No Guarantee of Examination Results or Passing</h2>
+          <p>Chartered Seeds makes no warranty, guarantee, or representation that using our study materials, question banks, summaries, or notes will ensure or result in passing any examination or clearing CA exams on any attempt. Academic results depend entirely on the individual candidate's preparation, comprehension, and official evaluation by the Institute of Chartered Accountants of India (ICAI). The materials are solely supplementary reference tools.</p>
         </div>
       </main>
     </div>

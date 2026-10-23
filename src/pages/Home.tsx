@@ -361,7 +361,7 @@ export default function Home() {
               Navigating the vast syllabus of CA Foundation, Intermediate, and Final can be overwhelming. Chartered Seeds aims to simplify this process by organizing content logically, ensuring you can find exactly what you need, exactly when you need it. From the latest taxation limits to detailed accounting standard summaries, we keep our content updated in alignment with the ICAI syllabus.
             </p>
             <p>
-              Whether you're starting your journey with CA Foundation or in the final stretch of your CA Final preparations, Chartered Seeds is here to plant the seeds of your success. Start exploring our resources today and take a confident step towards your professional goals.
+              Whether you're starting your journey with CA Foundation or in the final stretch of your CA Final preparations, Chartered Seeds provides organized study references and question repositories to support your self-study preparation.
             </p>
             <div className="mt-8 p-6 bg-purple-50 rounded-2xl text-purple-900 italic font-semibold border border-purple-100">
               "Our comprehensive question bank is meticulously curated based on Revision Test Papers (RTP), Mock Test Papers (MTP), and Previous Year Questions (PYQ) spanning from the May 2018 attempt to the latest attempt."

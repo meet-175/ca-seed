@@ -93,6 +93,13 @@ export default function Header({ className }: HeaderProps) {
         </div>
       </Link>
 
+      {/* Main Navigation Links */}
+      <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-purple-100">
+        <Link to="/level/foundation" className="hover:text-white transition-colors">CA Foundation</Link>
+        <Link to="/level/intermediate" className="hover:text-white transition-colors">CA Intermediate</Link>
+        <Link to="/news" className="hover:text-white transition-colors">ICAI Updates</Link>
+      </nav>
+
       <div className="flex items-center gap-2.5">
         <Link 
           to="/library" 

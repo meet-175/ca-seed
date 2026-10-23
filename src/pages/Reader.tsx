@@ -54,10 +54,25 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
     }
   };
 
+  const cleanBody = useMemo(() => {
+    let str = (item.body || '').trim();
+    if (str.startsWith('```html')) {
+      str = str.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
+    }
+    return str;
+  }, [item.body]);
+
   const isHtmlContent = useMemo(() => {
-    const text = item.body.trim().toLowerCase();
-    return text.startsWith('<!doctype html>') || text.startsWith('<html');
-  }, [item]);
+    const text = cleanBody.toLowerCase();
+    return text.startsWith('<!doctype html>') || text.startsWith('<html') || text.startsWith('<!doctype');
+  }, [cleanBody]);
+
+  const normalizedMarkdownBody = useMemo(() => {
+    if (!cleanBody) return '';
+    return cleanBody
+      .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$')
+      .replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+  }, [cleanBody]);
 
   const injectedHtml = useMemo(() => {
     if (!isHtmlContent) return '';
@@ -119,7 +134,7 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
     };
 
     // Find questions starting with <h3> tag and inject an ad after every 2 questions
-    let processedBody = item.body;
+    let processedBody = cleanBody;
     let questionH3Count = 0;
     processedBody = processedBody.replace(/(<h3\b[^>]*>)/gi, (match) => {
       questionH3Count++;
@@ -195,20 +210,58 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
             wipeClipboard();
           }
         }, true);
+
+        // Fast KaTeX auto-render + MathJax configuration
         window.MathJax = {
           tex: {
             inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
-            displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+            displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
           }
         };
       </script>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+      <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
       <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script>
+        function renderMath() {
+          try {
+            if (window.renderMathInElement) {
+              window.renderMathInElement(document.body, {
+                delimiters: [
+                  { left: '$$', right: '$$', display: true },
+                  { left: '\\\\[', right: '\\\\]', display: true },
+                  { left: '$', right: '$', display: false },
+                  { left: '\\\\(', right: '\\\\)', display: false }
+                ],
+                throwOnError: false,
+                strict: false
+              });
+            }
+          } catch (e) {}
+          try {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+              window.MathJax.typesetPromise().catch(function() {});
+            }
+          } catch (e) {}
+        }
+        document.addEventListener('DOMContentLoaded', renderMath);
+        window.addEventListener('load', renderMath);
+        setTimeout(renderMath, 40);
+        setTimeout(renderMath, 200);
+        setTimeout(renderMath, 800);
+      </script>
     `;
     if (processedBody.toLowerCase().includes('</head>')) {
       return processedBody.replace(/<\/head>/i, `${injection}</head>`);
     }
     return `<head>${injection}</head>${processedBody}`;
-  }, [item, isHtmlContent]);
+  }, [cleanBody, isHtmlContent]);
 
   useEffect(() => {
     if (iframeRef.current && isHtmlContent) {
@@ -229,16 +282,25 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
 
       const handleLoad = () => {
         updateHeight();
-        setTimeout(updateHeight, 400);
-        setTimeout(updateHeight, 1200);
-        setTimeout(updateHeight, 2500);
+        try {
+          const win = iframeRef.current?.contentWindow as any;
+          if (win?.MathJax?.typesetPromise) {
+            win.MathJax.typesetPromise().then(updateHeight).catch(() => {});
+          }
+          if (win?.renderMath) {
+            win.renderMath();
+          }
+        } catch (e) {}
+        setTimeout(updateHeight, 300);
+        setTimeout(updateHeight, 800);
+        setTimeout(updateHeight, 1800);
       };
 
       const iframe = iframeRef.current;
       iframe.addEventListener('load', handleLoad);
       return () => iframe?.removeEventListener('load', handleLoad);
     }
-  }, [item, isHtmlContent]);
+  }, [cleanBody, isHtmlContent]);
 
   let mdH3Count = 0;
 
@@ -283,7 +345,7 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
                 }
               }}
             >
-              {item.body}
+              {normalizedMarkdownBody}
             </ReactMarkdown>
           </div>
         )}
@@ -425,6 +487,19 @@ export default function Reader() {
     }
   };
 
+  const [availableSubjectChapters, setAvailableSubjectChapters] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (formattedLevelName && subject && formattedLevelName !== 'News & Updates') {
+      contentStore.getContentByLevel(formattedLevelName).then(items => {
+        const matchingChapters = items
+          .filter(c => c.subject === subject)
+          .map(c => c.chapter);
+        setAvailableSubjectChapters(Array.from(new Set(matchingChapters)));
+      });
+    }
+  }, [formattedLevelName, subject]);
+
   const { prevChapter, nextChapter } = useMemo(() => {
     if (formattedLevelName === 'News & Updates') return { prevChapter: null, nextChapter: null };
     
@@ -434,14 +509,17 @@ export default function Reader() {
     const subjectData = levelData.find(s => s.name === subject);
     if (!subjectData) return { prevChapter: null, nextChapter: null };
     
-    const allChapters = subjectData.sections.flatMap(sec => sec.chapters);
+    const allChapters = subjectData.sections
+      .flatMap(sec => sec.chapters)
+      .filter(ch => availableSubjectChapters.length === 0 || availableSubjectChapters.includes(ch));
+      
     const currentIndex = allChapters.indexOf(chapter);
     
     return {
       prevChapter: currentIndex > 0 ? allChapters[currentIndex - 1] : null,
       nextChapter: currentIndex >= 0 && currentIndex < allChapters.length - 1 ? allChapters[currentIndex + 1] : null,
     };
-  }, [formattedLevelName, subject, chapter]);
+  }, [formattedLevelName, subject, chapter, availableSubjectChapters]);
 
   const renderShareButtons = () => (
     <div className="flex items-center gap-2">
@@ -661,11 +739,21 @@ export default function Reader() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
-                <p className="text-gray-800 font-medium mb-2">No content available</p>
-                <p className="text-gray-500 text-sm leading-relaxed max-w-lg mx-auto">
-                  We couldn't find any study materials for <strong className="text-gray-700 font-semibold">{chapter}</strong>. If you are an admin, please upload the content via the Content Upload Portal.
+              <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-12 text-center shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <h3 className="text-gray-900 font-bold text-lg mb-2">Study Material in Editorial Curation</h3>
+                <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto mb-6">
+                  Comprehensive notes and questions for <strong className="text-gray-700 font-semibold">{chapter}</strong> are currently being curated and verified by qualified CA rankers.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => navigate(levelId === 'News & Updates' ? '/news' : `/level/${levelId}?subject=${encodeURIComponent(slugify(subject))}`)}
+                  className="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  Browse Available Chapters in {subject}
+                </button>
               </div>
             )}
 

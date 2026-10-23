@@ -1,21 +1,30 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { 
   ArrowLeft, Download, Upload, LogIn, Code, LogOut, CheckCircle2, 
-  AlertTriangle, Search, FileText, Check, Filter, RefreshCw, FolderDown, Edit3, Trash2, Sparkles
+  AlertTriangle, Search, FileText, Check, Filter, RefreshCw, FolderDown, Edit3, Trash2, Sparkles,
+  MessageSquare, Mail
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocs, deleteDoc, collection, query, orderBy } from 'firebase/firestore';
 import Header from '../components/Header';
 import { contentStore, ContentItem, cleanLatexFormulas } from '../content/store';
 import { SYLLABUS } from '../data/syllabus';
 import { auth, db } from '../firebase';
 
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: number;
+}
+
 const ALL_CONTENT_TYPES = ['Study Notes', 'Question Bank', 'MCQ Bank', 'Question Diagnosis'];
 
 export default function Admin() {
   // Navigation / Tabs
-  const [activeTab, setActiveTab] = useState<'upload' | 'download'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'download' | 'inquiries'>('upload');
 
   // Upload Form State
   const [level, setLevel] = useState('CA Foundation');
@@ -63,9 +72,43 @@ export default function Admin() {
     }
   };
 
+  // Contact Inquiries State
+  const [inquiries, setInquiries] = useState<ContactMessage[]>([]);
+  const [isLoadingInquiries, setIsLoadingInquiries] = useState(false);
+
+  const loadInquiries = async () => {
+    setIsLoadingInquiries(true);
+    try {
+      const q = query(collection(db, 'contact_messages'), orderBy('createdAt', 'desc'));
+      const snap = await getDocs(q);
+      const list: ContactMessage[] = [];
+      snap.forEach(d => {
+        list.push({ id: d.id, ...d.data() } as ContactMessage);
+      });
+      setInquiries(list);
+    } catch (err) {
+      console.error('Failed to load inquiries', err);
+    } finally {
+      setIsLoadingInquiries(false);
+    }
+  };
+
+  const handleDeleteInquiry = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this message?')) return;
+    try {
+      await deleteDoc(doc(db, 'contact_messages', id));
+      setInquiries(prev => prev.filter(m => m.id !== id));
+    } catch (err: any) {
+      alert(`Failed to delete message: ${err.message}`);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'download' && allLoadedItems.length === 0) {
       loadAllItems();
+    }
+    if (activeTab === 'inquiries') {
+      loadInquiries();
     }
   }, [activeTab]);
 
@@ -102,7 +145,7 @@ export default function Admin() {
     }
   };
 
-  const isMeetAdmin = user?.email?.toLowerCase() === 'meetp8697@gmail.com';
+  const isMeetAdmin = user?.email?.toLowerCase() === 'meetp8697@gmail.com' || user?.email?.toLowerCase() === 'chartered.seed.support@gmail.com';
 
   const [isAuditingFormulas, setIsAuditingFormulas] = useState(false);
   const [auditMessage, setAuditMessage] = useState<string | null>(null);
@@ -421,15 +464,6 @@ export default function Admin() {
             <Sparkles className={`w-4 h-4 ${isAuditingFormulas ? 'animate-spin' : ''}`} />
             {isAuditingFormulas ? 'Auditing...' : 'Audit & Fix Formulas'}
           </button>
-
-          <button 
-            onClick={() => contentStore.exportToJson({ unrenderLatex: true })}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg text-xs md:text-sm font-semibold transition-colors"
-            title="Download full database backup with unrendered LaTeX ($...$)"
-          >
-            <Download className="w-4 h-4" />
-            Full Backup (JSON)
-          </button>
         </div>
       </div>
 
@@ -506,13 +540,31 @@ export default function Admin() {
                 : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50'
             }`}
           >
-            <FolderDown className="w-4 h-4 md:w-5 md:h-5" />
-            Download & Browse Materials
+            <FileText className="w-4 h-4 md:w-5 md:h-5" />
+            Browse Materials
             {allLoadedItems.length > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 activeTab === 'download' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800'
               }`}>
                 {allLoadedItems.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('inquiries')}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm md:text-base transition-all flex items-center justify-center gap-2.5 ${
+              activeTab === 'inquiries'
+                ? 'bg-purple-700 text-white shadow-sm'
+                : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+            Inquiries
+            {inquiries.length > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                activeTab === 'inquiries' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800'
+              }`}>
+                {inquiries.length}
               </span>
             )}
           </button>
@@ -626,32 +678,6 @@ export default function Admin() {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             type="button"
-                            onClick={() => contentStore.downloadItem(item, { format: 'md', unrenderLatex: true })}
-                            className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
-                            title="Download as Markdown (.md) with unrendered LaTeX ($...$)"
-                          >
-                            <Download className="w-3 h-3" />
-                            .md
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => contentStore.downloadItem(item, { format: 'html', unrenderLatex: true })}
-                            className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors border border-purple-200"
-                            title="Download clean HTML (.html) with unrendered LaTeX"
-                          >
-                            <Download className="w-3 h-3" />
-                            .html
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => contentStore.downloadItem(item, { format: 'json', unrenderLatex: true })}
-                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
-                            title="Download as JSON record with unrendered LaTeX"
-                          >
-                            JSON
-                          </button>
-                          <button
-                            type="button"
                             onClick={() => {
                               setBody(item.body);
                               setContentType(item.contentType);
@@ -724,7 +750,7 @@ export default function Admin() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   <Filter className="w-5 h-5 text-purple-700" />
-                  <h2 className="text-lg font-bold text-gray-900">Filter & Select Materials to Download</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Filter & Browse Materials</h2>
                 </div>
                 <button
                   onClick={loadAllItems}
@@ -821,43 +847,16 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Results Header & Batch Download Action */}
+            {/* Results Header */}
             <div className="bg-purple-900 text-white p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider font-bold text-purple-200">Selection Summary</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                    LaTeX Unrendered ($...$)
-                  </span>
-                </div>
+                <span className="text-xs uppercase tracking-wider font-bold text-purple-200">Selection Summary</span>
                 <h3 className="text-xl font-bold mt-1">
                   {isLoadingAllItems ? 'Loading materials...' : `${filteredItems.length} Materials Found`}
                 </h3>
                 <p className="text-xs text-purple-200 mt-1">
                   Filters: {filterLevel} • {filterSubject} • {filterChapter} • {filterType}
                 </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-                <button
-                  onClick={handleDownloadFilteredMarkdownBundle}
-                  disabled={filteredItems.length === 0 || isLoadingAllItems}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-purple-50 disabled:bg-gray-400 text-purple-900 rounded-xl font-bold text-xs md:text-sm transition-colors shadow-sm"
-                  title="Download all filtered materials combined into a single Markdown document with unrendered LaTeX ($...$)"
-                >
-                  <FileText className="w-4 h-4 text-purple-700" />
-                  Download Markdown Bundle ({filteredItems.length})
-                </button>
-
-                <button
-                  onClick={handleDownloadFilteredBundle}
-                  disabled={filteredItems.length === 0 || isLoadingAllItems}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-500 text-white rounded-xl font-bold text-xs md:text-sm transition-colors shadow-sm"
-                  title="Download all filtered records as JSON with unrendered LaTeX ($...$)"
-                >
-                  <Download className="w-4 h-4" />
-                  Download JSON ({filteredItems.length})
-                </button>
               </div>
             </div>
 
@@ -918,50 +917,95 @@ export default function Admin() {
                     </div>
 
                     {/* Action Buttons for this item */}
+                    {/* Action Buttons for this item */}
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
                       <button
-                        onClick={() => contentStore.downloadItem(item, { format: 'md', unrenderLatex: true })}
-                        className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
-                        title="Download Markdown (.md) with unrendered LaTeX ($...$)"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Download .md
-                      </button>
-
-                      <button
-                        onClick={() => contentStore.downloadItem(item, { format: 'html', unrenderLatex: true })}
-                        className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
-                        title="Download clean HTML (.html) with unrendered LaTeX"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        .html
-                      </button>
-
-                      <button
-                        onClick={() => contentStore.downloadItem(item, { format: 'json', unrenderLatex: true })}
-                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
-                        title="Download as JSON record with unrendered LaTeX"
-                      >
-                        JSON
-                      </button>
-
-                      <button
                         onClick={() => loadItemIntoEditor(item)}
-                        className="p-2 bg-gray-50 hover:bg-purple-50 text-gray-600 hover:text-purple-700 rounded-xl border border-gray-200 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-purple-50 text-gray-700 hover:text-purple-700 rounded-xl border border-gray-200 transition-colors font-medium text-xs cursor-pointer"
                         title="Load into Editor to Edit/Update"
                       >
-                        <Edit3 className="w-4 h-4" />
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit Content</span>
                       </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-                      {isMeetAdmin && (
-                        <button
-                          onClick={() => handleDeleteItem(item.id, `${item.chapter} (${item.contentType})`)}
-                          className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-xl border border-gray-200 transition-colors"
-                          title="Delete this material"
+        {/* TAB 3: CONTACT INQUIRIES */}
+        {activeTab === 'inquiries' && (
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between pb-6 border-b border-gray-100 mb-6 flex-wrap gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Student & Visitor Inquiries</h2>
+                <p className="text-gray-500 text-sm mt-1">
+                  Messages submitted by students and users through the Contact Us form on Chartered Seeds.
+                </p>
+              </div>
+              <button
+                onClick={loadInquiries}
+                disabled={isLoadingInquiries}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingInquiries ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+            </div>
+
+            {isLoadingInquiries ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full"></div>
+              </div>
+            ) : inquiries.length === 0 ? (
+              <div className="py-16 text-center text-gray-500">
+                <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <h4 className="font-bold text-gray-700 text-base mb-1">No Inquiries Received Yet</h4>
+                <p className="text-sm text-gray-400">
+                  When visitors submit inquiries on the Contact Us page, they will automatically appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {inquiries.map((inq) => (
+                  <div key={inq.id} className="p-5 rounded-2xl border border-gray-200 bg-gray-50/50 hover:bg-white transition-all space-y-3">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-gray-900 text-base">{inq.name}</h4>
+                          <span className="text-xs text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-md font-medium">
+                            {inq.email}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Received on {new Date(inq.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`mailto:${inq.email}?subject=${encodeURIComponent('Re: Inquiry on Chartered Seeds')}`}
+                          className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                          <Mail className="w-3.5 h-3.5" />
+                          Reply via Email
+                        </a>
+                        {isMeetAdmin && (
+                          <button
+                            onClick={() => handleDeleteInquiry(inq.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete message"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {inq.message}
                     </div>
                   </div>
                 ))}

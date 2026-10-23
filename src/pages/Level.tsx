@@ -38,6 +38,11 @@ export default function Level() {
   const [levelContent, setLevelContent] = useState<ContentItem[]>([]);
   const navigate = useNavigate();
 
+  const getSubjectChapterCount = (subjName: string) => {
+    const matching = levelContent.filter(c => c.subject === subjName);
+    return new Set(matching.map(c => c.chapter)).size;
+  };
+
   useEffect(() => {
     const paramSubject = searchParams.get('subject');
     if (paramSubject && levelSyllabus.length > 0) {
@@ -56,6 +61,12 @@ export default function Level() {
     if (formattedLevelName) {
       contentStore.getContentByLevel(formattedLevelName).then((items) => {
         setLevelContent(items);
+        if (!paramSubject && items.length > 0) {
+          const firstWithContent = levelSyllabus.find(s => items.some(c => c.subject === s.name));
+          if (firstWithContent) {
+            setSelectedSubject(firstWithContent.name);
+          }
+        }
       });
     }
   }, [levelId, formattedLevelName, levelSyllabus, searchParams]);
@@ -144,7 +155,7 @@ export default function Level() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
             type="text" 
-            placeholder="Search chapters..." 
+            placeholder="Search active chapters..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-4 py-2 bg-gray-100 border-transparent rounded-full text-sm outline-none focus:bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 w-[180px] md:w-[280px] transition-all"
@@ -165,164 +176,234 @@ export default function Level() {
           </p>
         </div>
 
-        {/* Subjects List */}
+        {/* Subjects List with Material Badges */}
         {levelSyllabus.length > 0 && (
           <div className="flex flex-col rounded-2xl overflow-hidden border border-gray-200 mb-10 bg-white shadow-sm">
-            {levelSyllabus.map(subject => (
-              <button
-                key={subject.name}
-                className={cn(
-                  "text-left px-5 md:px-6 py-4 font-bold text-sm md:text-base border-b border-gray-100 last:border-b-0 transition-all",
-                  selectedSubject === subject.name 
-                    ? "bg-[#8b5cf6] text-white" 
-                    : "text-gray-700 hover:bg-gray-50"
-                )}
-                onClick={() => {
-                  setSelectedSubject(subject.name);
-                  setSearchParams({ subject: slugify(subject.name) });
-                }}
-              >
-                {subject.name}
-              </button>
-            ))}
+            {levelSyllabus.map(subject => {
+              const chapterCount = getSubjectChapterCount(subject.name);
+              const isSelected = selectedSubject === subject.name;
+              return (
+                <button
+                  key={subject.name}
+                  className={cn(
+                    "text-left px-5 md:px-6 py-4 font-bold text-sm md:text-base border-b border-gray-100 last:border-b-0 transition-all flex items-center justify-between",
+                    isSelected 
+                      ? "bg-[#8b5cf6] text-white" 
+                      : "text-gray-700 hover:bg-gray-50"
+                  )}
+                  onClick={() => {
+                    setSelectedSubject(subject.name);
+                    setSearchParams({ subject: slugify(subject.name) });
+                  }}
+                >
+                  <span>{subject.name}</span>
+                  {chapterCount > 0 ? (
+                    <span className={cn(
+                      "text-xs px-2.5 py-0.5 rounded-full font-semibold",
+                      isSelected ? "bg-white/20 text-white" : "bg-purple-50 text-purple-700 border border-purple-100"
+                    )}>
+                      {chapterCount} {chapterCount === 1 ? 'Chapter' : 'Chapters'}
+                    </span>
+                  ) : (
+                    <span className={cn(
+                      "text-xs px-2.5 py-0.5 rounded-full font-medium",
+                      isSelected ? "bg-white/10 text-purple-100" : "bg-gray-100 text-gray-400"
+                    )}>
+                      In Preparation
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
         {/* Catalog High-Yield Leaderboard Ad */}
         <AdUnit slot="levelTopLeaderboard" className="mb-8" />
 
-        {/* Chapters Accordion */}
+        {/* Chapters Accordion - Only renders chapters with verified uploaded material */}
         {currentSubjectData && (
           <div className="space-y-6">
-            {currentSubjectData.sections.map((section, secIdx) => {
-              // Filter chapters based on search query
-              const filteredChapters = section.chapters.filter(ch => 
-                ch.toLowerCase().includes(searchQuery.toLowerCase())
-              );
+            {(() => {
+              let totalVisibleChapters = 0;
+              const renderedSections = currentSubjectData.sections.map((section, secIdx) => {
+                // Filter chapters: must match search query AND have at least one uploaded document in levelContent
+                const filteredChapters = section.chapters.filter(ch => {
+                  const matchesSearch = ch.toLowerCase().includes(searchQuery.toLowerCase());
+                  if (!matchesSearch) return false;
+                  
+                  const hasContent = levelContent.some(c => c.subject === selectedSubject && c.chapter === ch);
+                  return hasContent;
+                });
 
-              if (filteredChapters.length === 0) return null;
+                if (filteredChapters.length === 0) return null;
+                totalVisibleChapters += filteredChapters.length;
 
-              return (
-                <div key={secIdx}>
-                  {section.title && (
-                    <h3 className="text-[11px] font-bold tracking-[0.15em] text-gray-400 uppercase mt-8 mb-4 px-2">
-                      {section.title}
-                    </h3>
-                  )}
-                  <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
-                    {filteredChapters.map((chapter, chIdx) => {
-                      const isExpanded = expandedChapter === chapter;
-                      
-                      const studyNotes = getContentItem(chapter, 'Study Notes');
-                      const questionBank = getContentItem(chapter, 'Question Bank');
-                      const mcqBank = getContentItem(chapter, 'MCQ Bank') || getContentItem(chapter, 'Multiple Choice'); // fallback compatibility
-                      const questionDiagnosis = getContentItem(chapter, 'Question Diagnosis');
+                return (
+                  <div key={secIdx}>
+                    {section.title && (
+                      <h3 className="text-[11px] font-bold tracking-[0.15em] text-gray-400 uppercase mt-8 mb-4 px-2">
+                        {section.title}
+                      </h3>
+                    )}
+                    <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                      {filteredChapters.map((chapter) => {
+                        const isExpanded = expandedChapter === chapter;
+                        
+                        const studyNotes = getContentItem(chapter, 'Study Notes');
+                        const questionBank = getContentItem(chapter, 'Question Bank');
+                        const mcqBank = getContentItem(chapter, 'MCQ Bank') || getContentItem(chapter, 'Multiple Choice');
+                        const questionDiagnosis = getContentItem(chapter, 'Question Diagnosis');
 
-                      return (
-                        <div key={chapter} className="border-b last:border-b-0 border-gray-100">
-                          <button 
-                            onClick={() => toggleChapter(chapter)} 
-                            className="w-full flex items-center justify-between p-4 md:p-5 text-left hover:bg-gray-50 transition-colors"
-                          >
-                            <span className="font-bold text-gray-800 text-sm md:text-base pr-4 leading-snug">{chapter}</span>
-                            <ChevronDown className={cn("w-5 h-5 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-180")} />
-                          </button>
-                          
-                          {/* Expanded Content View */}
-                          {isExpanded && (
-                            <div className="p-4 md:p-6 bg-[#fafafa] border-t border-gray-100 flex flex-col gap-5">
-                              
-                              {/* Share Row */}
-                              <div className="flex items-center gap-3">
-                                <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Share:</span>
-                                <div className="flex gap-2">
-                                  <button onClick={() => handleShare('whatsapp', chapter)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-green-500 hover:border-green-200 shadow-sm transition-colors">
-                                    <MessageCircle className="w-4 h-4" />
-                                  </button>
-                                  <button onClick={() => handleShare('telegram', chapter)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 hover:border-blue-200 shadow-sm transition-colors">
-                                    <Send className="w-4 h-4" />
-                                  </button>
-                                  <button onClick={() => handleShare('link', chapter)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-purple-500 hover:border-purple-200 shadow-sm transition-colors">
-                                    <LinkIcon className="w-4 h-4" />
-                                  </button>
+                        return (
+                          <div key={chapter} className="border-b last:border-b-0 border-gray-100">
+                            <button 
+                              onClick={() => toggleChapter(chapter)} 
+                              className="w-full flex items-center justify-between p-4 md:p-5 text-left hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-2.5 pr-4 flex-wrap">
+                                <span className="font-bold text-gray-800 text-sm md:text-base leading-snug">{chapter}</span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {studyNotes && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-pink-50 text-pink-700 px-2 py-0.5 rounded border border-pink-100">Notes</span>
+                                  )}
+                                  {questionBank && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-100">Questions</span>
+                                  )}
+                                  {mcqBank && formattedLevelName !== 'CA Foundation' && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">MCQ</span>
+                                  )}
+                                  {questionDiagnosis && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">Diagnosis</span>
+                                  )}
                                 </div>
                               </div>
-
-                              {/* Action Cards */}
-                              <div className="flex flex-col gap-3 mt-2">
-                                {/* Study Notes Card */}
-                                <div 
-                                  onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#study-notes`)}
-                                  className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-purple-100 hover:border-purple-300 hover:shadow-sm"
-                                >
-                                  <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center text-pink-500 shrink-0">
-                                    <FileText className="w-6 h-6" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Study Notes</h4>
-                                    <p className="text-xs md:text-sm text-gray-500">Comprehensive study material and summaries</p>
-                                  </div>
-                                </div>
-
-                                {/* Question Bank Card */}
-                                <div 
-                                  onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-bank`)}
-                                  className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm"
-                                >
-                                  <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
-                                    <HelpCircle className="w-6 h-6" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Bank</h4>
-                                    <p className="text-xs md:text-sm text-gray-500">Practice questions with detailed solutions</p>
-                                  </div>
-                                </div>
-
-                                {/* In-Between Dropdown Sponsor Ad Unit */}
-                                <AdUnit slot="chapterDropdownInBetween" className="my-1" />
-
-                                {/* MCQ Bank Card */}
-                                {formattedLevelName !== 'CA Foundation' && (
-                                  <div 
-                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
-                                    className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
-                                  >
-                                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                                      <CheckSquare className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Multiple Choice</h4>
-                                      <p className="text-xs md:text-sm text-gray-500">Test your knowledge with MCQs</p>
-                                    </div>
-                                  </div>
-                                )}
+                              <ChevronDown className={cn("w-5 h-5 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-180")} />
+                            </button>
+                            
+                            {/* Expanded Content View */}
+                            {isExpanded && (
+                              <div className="p-4 md:p-6 bg-[#fafafa] border-t border-gray-100 flex flex-col gap-5">
                                 
-                                {/* Question Diagnosis Card */}
-                                {!(formattedLevelName === 'CA Intermediate' && (selectedSubject === 'Advanced Accounting' || selectedSubject === 'Taxation')) && (
-                                  <div 
-                                    onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-diagnosis`)}
-                                    className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm"
-                                  >
-                                    <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
-                                      <Activity className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Diagnosis</h4>
-                                      <p className="text-xs md:text-sm text-gray-500">Detailed question breakdowns</p>
-                                    </div>
+                                {/* Share Row */}
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Share:</span>
+                                  <div className="flex gap-2">
+                                    <button onClick={() => handleShare('whatsapp', chapter)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-green-500 hover:border-green-200 shadow-sm transition-colors">
+                                      <MessageCircle className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleShare('telegram', chapter)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-500 hover:border-blue-200 shadow-sm transition-colors">
+                                      <Send className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleShare('link', chapter)} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-purple-500 hover:border-purple-200 shadow-sm transition-colors">
+                                      <LinkIcon className="w-4 h-4" />
+                                    </button>
                                   </div>
-                                )}
-                              </div>
+                                </div>
 
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                                {/* Action Cards - ONLY SHOW OPTIONS THAT HAVE MATERIAL UPLOADED */}
+                                <div className="flex flex-col gap-3 mt-2">
+                                  {/* Study Notes Card */}
+                                  {studyNotes && (
+                                    <div 
+                                      onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#study-notes`)}
+                                      className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-purple-100 hover:border-purple-300 hover:shadow-sm"
+                                    >
+                                      <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center text-pink-500 shrink-0">
+                                        <FileText className="w-6 h-6" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Study Notes</h4>
+                                        <p className="text-xs md:text-sm text-gray-500">Comprehensive study material and summaries</p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Question Bank Card */}
+                                  {questionBank && (
+                                    <div 
+                                      onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-bank`)}
+                                      className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-orange-100 hover:border-orange-300 hover:shadow-sm"
+                                    >
+                                      <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+                                        <HelpCircle className="w-6 h-6" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Bank</h4>
+                                        <p className="text-xs md:text-sm text-gray-500">Practice questions with detailed solutions</p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* In-Between Dropdown Sponsor Ad Unit */}
+                                  {(studyNotes || questionBank) && (
+                                    <AdUnit slot="chapterDropdownInBetween" className="my-1" />
+                                  )}
+
+                                  {/* MCQ Bank Card */}
+                                  {mcqBank && formattedLevelName !== 'CA Foundation' && (
+                                    <div 
+                                      onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#mcq-bank`)}
+                                      className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-blue-100 hover:border-blue-300 hover:shadow-sm"
+                                    >
+                                      <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                                        <CheckSquare className="w-6 h-6" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Multiple Choice</h4>
+                                        <p className="text-xs md:text-sm text-gray-500">Test your knowledge with MCQs</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Question Diagnosis Card */}
+                                  {questionDiagnosis && (
+                                    <div 
+                                      onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#question-diagnosis`)}
+                                      className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-emerald-100 hover:border-emerald-300 hover:shadow-sm"
+                                    >
+                                      <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
+                                        <Activity className="w-6 h-6" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Diagnosis</h4>
+                                        <p className="text-xs md:text-sm text-gray-500">Detailed question breakdowns</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              });
+
+              if (totalVisibleChapters === 0) {
+                return (
+                  <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-12 text-center shadow-xs">
+                    <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                      {searchQuery ? 'No matching chapters found' : 'Study Materials in Editorial Curation'}
+                    </h3>
+                    <p className="text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
+                      {searchQuery 
+                        ? `No uploaded materials match "${searchQuery}". Try searching for another chapter keyword.`
+                        : `Comprehensive notes and question banks for ${selectedSubject} are currently being curated and verified by qualified rankers. Please explore our other active subjects above.`
+                      }
+                    </p>
+                  </div>
+                );
+              }
+
+              return renderedSections;
+            })()}
           </div>
         )}
 

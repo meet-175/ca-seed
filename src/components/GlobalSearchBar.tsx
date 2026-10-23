@@ -12,7 +12,8 @@ import {
   Layers,
   ChevronRight,
   Filter,
-  Bookmark
+  Bookmark,
+  Activity
 } from 'lucide-react';
 import { SYLLABUS, SyllabusSubject } from '../data/syllabus';
 import { slugify } from '../lib/slugs';
@@ -33,6 +34,7 @@ export interface SearchResultItem {
   hasNotes?: boolean;
   hasQuestions?: boolean;
   hasMcq?: boolean;
+  hasDiagnosis?: boolean;
 }
 
 export default function GlobalSearchBar() {
@@ -147,6 +149,17 @@ export default function GlobalSearchBar() {
               c.chapter === chap && 
               (c.contentType === 'MCQ Bank' || c.contentType === 'mcq-bank' || c.contentType === 'Multiple Choice')
             );
+            const hasDiagnosis = storeContent.some(c => 
+              c.level === lvl.name && 
+              c.subject === subj.name && 
+              c.chapter === chap && 
+              c.contentType === 'Question Diagnosis'
+            );
+
+            // Hide chapters with no materials from the search index
+            if (!hasNotes && !hasQuestions && !hasMcq && !hasDiagnosis) {
+              return;
+            }
 
             items.push({
               id: `chap-${lvl.slug}-${subjectSlug}-${chapterSlug}`,
@@ -160,7 +173,8 @@ export default function GlobalSearchBar() {
               sectionTitle: sec.title || undefined,
               hasNotes,
               hasQuestions,
-              hasMcq
+              hasMcq,
+              hasDiagnosis
             });
           });
         });
@@ -551,27 +565,31 @@ export default function GlobalSearchBar() {
                         </button>
                       ) : (
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <button
-                            type="button"
-                            onClick={() => handleSelectResult(item, 'study-notes')}
-                            title="Open Study Notes"
-                            className="flex items-center gap-1 px-2.5 py-1 bg-pink-50 hover:bg-pink-100 text-pink-700 font-semibold text-xs rounded-lg border border-pink-200 transition-colors"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>Notes</span>
-                          </button>
+                          {item.hasNotes && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectResult(item, 'study-notes')}
+                              title="Open Study Notes"
+                              className="flex items-center gap-1 px-2.5 py-1 bg-pink-50 hover:bg-pink-100 text-pink-700 font-semibold text-xs rounded-lg border border-pink-200 transition-colors"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Notes</span>
+                            </button>
+                          )}
 
-                          <button
-                            type="button"
-                            onClick={() => handleSelectResult(item, 'question-bank')}
-                            title="Open Question Bank"
-                            className="flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-xs rounded-lg border border-orange-200 transition-colors"
-                          >
-                            <HelpCircle className="w-3.5 h-3.5" />
-                            <span>Questions</span>
-                          </button>
+                          {item.hasQuestions && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectResult(item, 'question-bank')}
+                              title="Open Question Bank"
+                              className="flex items-center gap-1 px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold text-xs rounded-lg border border-orange-200 transition-colors"
+                            >
+                              <HelpCircle className="w-3.5 h-3.5" />
+                              <span>Questions</span>
+                            </button>
+                          )}
 
-                          {item.levelName !== 'CA Foundation' && (
+                          {item.hasMcq && item.levelName !== 'CA Foundation' && (
                             <button
                               type="button"
                               onClick={() => handleSelectResult(item, 'mcq-bank')}
@@ -580,6 +598,18 @@ export default function GlobalSearchBar() {
                             >
                               <CheckSquare className="w-3.5 h-3.5" />
                               <span>MCQ</span>
+                            </button>
+                          )}
+
+                          {item.hasDiagnosis && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectResult(item, 'question-diagnosis')}
+                              title="Open Question Diagnosis"
+                              className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-lg border border-emerald-200 transition-colors"
+                            >
+                              <Activity className="w-3.5 h-3.5" />
+                              <span>Diagnosis</span>
                             </button>
                           )}
 

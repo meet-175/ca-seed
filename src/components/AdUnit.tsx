@@ -116,7 +116,7 @@ function FallbackAdBanner({ format, name, slotId }: { format: string; name: stri
               </h4>
             </div>
             <p className="text-[11px] md:text-xs text-gray-600 line-clamp-1">
-              Attempt simulated mock exam papers evaluated by qualified Chartered Accountants
+              Practice chapter-wise mock questions aligned with the ICAI syllabus
             </p>
           </div>
         </div>
@@ -140,7 +140,7 @@ function FallbackAdBanner({ format, name, slotId }: { format: string; name: stri
           </div>
 
           <h3 className="text-xl font-extrabold leading-snug tracking-tight text-white mb-2">
-            Ace Your CA Exams on 1st Attempt
+            Structured Notes & Chapter Question Banks
           </h3>
           <p className="text-xs text-purple-200/90 leading-relaxed mb-6">
             Get access to 5,000+ chapter-wise practice MCQs, ICAI RTPs & MTPs with step-by-step verified solutions.
