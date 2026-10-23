@@ -10,7 +10,8 @@ service cloud.firestore {
     // Admin Check
     function isAdmin() {
       return request.auth != null && (
-        request.auth.token.email.lower() == 'meetp8697@gmail.com'
+        request.auth.token.email.lower() == 'meetp8697@gmail.com' ||
+        request.auth.token.email.lower() == 'chartered.seed.support@gmail.com'
       );
     }
 
@@ -47,6 +48,17 @@ service cloud.firestore {
       allow update: if isAdmin() && isValidId(contentId) && isValidContentItem(incoming());
       
       allow delete: if isAdmin();
+    }
+
+    // 3. Contact Messages Collection
+    match /contact_messages/{messageId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message', 'createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 200
+        && request.resource.data.email is string && request.resource.data.email.size() > 0 && request.resource.data.email.size() <= 200
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 10000
+        && request.resource.data.createdAt is number;
+      allow read, delete: if isAdmin();
+      allow update: if false;
     }
   }
 }
