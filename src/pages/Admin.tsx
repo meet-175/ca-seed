@@ -20,7 +20,7 @@ interface ContactMessage {
   createdAt: number;
 }
 
-const ALL_CONTENT_TYPES = ['Study Notes', 'Question Bank', 'MCQ Bank', 'Question Diagnosis'];
+const ALL_CONTENT_TYPES = ['Study Notes', 'Question Bank', 'MCQ Bank', 'Question Diagnosis', 'Random Topic Authors Think Interesting'];
 
 export default function Admin() {
   // Navigation / Tabs
@@ -181,6 +181,16 @@ export default function Admin() {
   };
 
   const availableSubjects = useMemo(() => {
+    if (level === 'Random Topic Authors Think Interesting') {
+      return [
+        { name: 'Finance' },
+        { name: 'Law' },
+        { name: 'Corporate' },
+        { name: 'Accounting' },
+        { name: 'Auditing' },
+        { name: 'Special Insights' }
+      ];
+    }
     if (level === 'News & Updates') {
       return [
         { name: 'Study Material' }, 
@@ -193,13 +203,16 @@ export default function Admin() {
   }, [level]);
 
   const availableChapters = useMemo(() => {
-    if (level === 'News & Updates') return [];
+    if (level === 'News & Updates' || level === 'Random Topic Authors Think Interesting') return [];
     const currentSubject: any = availableSubjects.find(s => s.name === subject);
     if (!currentSubject || !('sections' in currentSubject)) return [];
     return currentSubject.sections.reduce((acc: string[], sec: any) => [...acc, ...sec.chapters], []);
   }, [availableSubjects, subject, level]);
 
   const availableContentTypes = useMemo(() => {
+    if (level === 'Random Topic Authors Think Interesting') {
+      return ['Article / Deep Dive', 'Random Topic Authors Think Interesting'];
+    }
     if (level === 'News & Updates') {
       return ['News Article'];
     }
@@ -213,7 +226,11 @@ export default function Admin() {
     const newLevel = e.target.value;
     setLevel(newLevel);
     
-    if (newLevel === 'News & Updates') {
+    if (newLevel === 'Random Topic Authors Think Interesting') {
+      setSubject('Finance');
+      setContentType('Article / Deep Dive');
+      setChapter('');
+    } else if (newLevel === 'News & Updates') {
       setSubject('Study Material');
       setContentType('News Article');
       setChapter('');
@@ -221,7 +238,7 @@ export default function Admin() {
       const firstSubject = SYLLABUS[newLevel]?.[0]?.name || '';
       setSubject(firstSubject);
       setChapter('');
-      if (contentType === 'News Article' || (newLevel === 'CA Foundation' && contentType === 'MCQ Bank')) {
+      if (contentType === 'News Article' || contentType === 'Article / Deep Dive' || (newLevel === 'CA Foundation' && contentType === 'MCQ Bank')) {
         setContentType('Study Notes');
       }
     }
@@ -313,6 +330,9 @@ export default function Admin() {
       const allSubs = new Set<string>();
       allLoadedItems.forEach(i => allSubs.add(i.subject));
       return Array.from(allSubs).sort();
+    }
+    if (filterLevel === 'Random Topic Authors Think Interesting') {
+      return ['Finance', 'Law', 'Corporate', 'Accounting', 'Auditing', 'Special Insights'];
     }
     if (filterLevel === 'News & Updates') {
       return ['Study Material', 'Exam Update', 'Educational Case Study', 'Professional Update'];
@@ -464,6 +484,15 @@ export default function Admin() {
             <Sparkles className={`w-4 h-4 ${isAuditingFormulas ? 'animate-spin' : ''}`} />
             {isAuditingFormulas ? 'Auditing...' : 'Audit & Fix Formulas'}
           </button>
+
+          <button 
+            onClick={() => contentStore.exportToJson({ unrenderLatex: true })}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg text-xs md:text-sm font-semibold transition-colors cursor-pointer"
+            title="Download full database backup with unrendered LaTeX ($...$)"
+          >
+            <Download className="w-4 h-4" />
+            Full Backup (JSON)
+          </button>
         </div>
       </div>
 
@@ -540,8 +569,8 @@ export default function Admin() {
                 : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50'
             }`}
           >
-            <FileText className="w-4 h-4 md:w-5 md:h-5" />
-            Browse Materials
+            <FolderDown className="w-4 h-4 md:w-5 md:h-5" />
+            Download & Browse
             {allLoadedItems.length > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 activeTab === 'download' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-800'
@@ -590,12 +619,17 @@ export default function Admin() {
                     <option key={lvl} value={lvl}>{lvl}</option>
                   ))}
                   <option value="News & Updates">News & Updates</option>
+                  <option value="Random Topic Authors Think Interesting">Random Topic Authors Think Interesting (Beyond CA Syllabus)</option>
                 </select>
               </div>
               
               <div className="space-y-2">
                 <label className="block text-sm font-bold text-gray-700">
-                  {level === 'News & Updates' ? 'Category' : 'Subject'}
+                  {level === 'Random Topic Authors Think Interesting'
+                    ? 'Topic Domain (Finance, Law, Corporate, etc.)'
+                    : level === 'News & Updates' 
+                    ? 'Category' 
+                    : 'Subject'}
                 </label>
                 <select 
                   value={subject}
@@ -613,7 +647,9 @@ export default function Admin() {
 
               <div className="space-y-2">
                 <label className="block text-sm font-bold text-gray-700">
-                  {level === 'News & Updates' ? 'Article Title' : 'Chapter Name'}
+                  {level === 'News & Updates' || level === 'Random Topic Authors Think Interesting' 
+                    ? 'Article / Topic Title' 
+                    : 'Chapter Name'}
                 </label>
                 <input 
                   type="text" 
@@ -621,13 +657,15 @@ export default function Admin() {
                   value={chapter}
                   onChange={(e) => setChapter(e.target.value)}
                   placeholder={
-                    level === 'News & Updates' 
+                    level === 'Random Topic Authors Think Interesting'
+                      ? "e.g. Cross-Border M&A Valuation, Forensic Audit of Off-Balance Sheet Entities, Corporate Governance..."
+                      : level === 'News & Updates' 
                       ? (subject === 'Educational Case Study' ? "e.g. Issue: Forensic Financial Teardown..." : "e.g. ICAI releases RTPs...") 
                       : "e.g. Introduction to Accounting"
                   }
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
                 />
-                {level !== 'News & Updates' && (
+                {level !== 'News & Updates' && level !== 'Random Topic Authors Think Interesting' && (
                   <datalist id="chapter-suggestions">
                     {availableChapters.map(ch => (
                       <option key={ch} value={ch} />
@@ -678,11 +716,37 @@ export default function Admin() {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             type="button"
+                            onClick={() => contentStore.downloadItem(item, { format: 'md', unrenderLatex: true })}
+                            className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Download as Markdown (.md) with unrendered LaTeX ($...$)"
+                          >
+                            <Download className="w-3 h-3" />
+                            .md
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => contentStore.downloadItem(item, { format: 'html', unrenderLatex: true })}
+                            className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors border border-purple-200 cursor-pointer"
+                            title="Download clean HTML (.html) with unrendered LaTeX"
+                          >
+                            <Download className="w-3 h-3" />
+                            .html
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => contentStore.downloadItem(item, { format: 'json', unrenderLatex: true })}
+                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Download as JSON record with unrendered LaTeX"
+                          >
+                            JSON
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => {
                               setBody(item.body);
                               setContentType(item.contentType);
                             }}
-                            className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+                            className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                             title="Load content into editor"
                           >
                             <Edit3 className="w-3 h-3" />
@@ -750,7 +814,7 @@ export default function Admin() {
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   <Filter className="w-5 h-5 text-purple-700" />
-                  <h2 className="text-lg font-bold text-gray-900">Filter & Browse Materials</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Filter & Select Materials to Download</h2>
                 </div>
                 <button
                   onClick={loadAllItems}
@@ -780,6 +844,7 @@ export default function Admin() {
                       <option key={lvl} value={lvl}>{lvl}</option>
                     ))}
                     <option value="News & Updates">News & Updates</option>
+                    <option value="Random Topic Authors Think Interesting">Random Topic Authors Think Interesting</option>
                   </select>
                 </div>
 
@@ -829,6 +894,7 @@ export default function Admin() {
                     <option value="Question Bank">Question Bank</option>
                     <option value="MCQ Bank">MCQ Bank</option>
                     <option value="Question Diagnosis">Question Diagnosis</option>
+                    <option value="Random Topic Authors Think Interesting">Random Topic Authors Think Interesting</option>
                     <option value="News Article">News Article</option>
                   </select>
                 </div>
@@ -847,16 +913,43 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Results Header */}
+            {/* Results Header & Batch Download Action */}
             <div className="bg-purple-900 text-white p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
               <div>
-                <span className="text-xs uppercase tracking-wider font-bold text-purple-200">Selection Summary</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs uppercase tracking-wider font-bold text-purple-200">Selection Summary</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    LaTeX Unrendered ($...$)
+                  </span>
+                </div>
                 <h3 className="text-xl font-bold mt-1">
                   {isLoadingAllItems ? 'Loading materials...' : `${filteredItems.length} Materials Found`}
                 </h3>
                 <p className="text-xs text-purple-200 mt-1">
                   Filters: {filterLevel} • {filterSubject} • {filterChapter} • {filterType}
                 </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                <button
+                  onClick={handleDownloadFilteredMarkdownBundle}
+                  disabled={filteredItems.length === 0 || isLoadingAllItems}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-purple-50 disabled:bg-gray-400 text-purple-900 rounded-xl font-bold text-xs md:text-sm transition-colors shadow-sm cursor-pointer"
+                  title="Download all filtered materials combined into a single Markdown document with unrendered LaTeX ($...$)"
+                >
+                  <FileText className="w-4 h-4 text-purple-700" />
+                  Download Markdown Bundle ({filteredItems.length})
+                </button>
+
+                <button
+                  onClick={handleDownloadFilteredBundle}
+                  disabled={filteredItems.length === 0 || isLoadingAllItems}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-500 text-white rounded-xl font-bold text-xs md:text-sm transition-colors shadow-sm cursor-pointer"
+                  title="Download all filtered records as JSON with unrendered LaTeX ($...$)"
+                >
+                  <Download className="w-4 h-4" />
+                  Download JSON ({filteredItems.length})
+                </button>
               </div>
             </div>
 
@@ -901,6 +994,7 @@ export default function Admin() {
                           item.contentType === 'Question Bank' ? 'bg-orange-50 text-orange-700 border border-orange-100' :
                           item.contentType === 'MCQ Bank' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
                           item.contentType === 'Question Diagnosis' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          item.contentType === 'Random Topic Authors Think Interesting' || item.contentType === 'Random Topics Authors Think Interesting' ? 'bg-violet-50 text-violet-700 border border-violet-100' :
                           'bg-indigo-50 text-indigo-700 border border-indigo-100'
                         }`}>
                           {item.contentType}
@@ -917,16 +1011,50 @@ export default function Admin() {
                     </div>
 
                     {/* Action Buttons for this item */}
-                    {/* Action Buttons for this item */}
                     <div className="flex items-center gap-2 shrink-0 flex-wrap">
                       <button
+                        onClick={() => contentStore.downloadItem(item, { format: 'md', unrenderLatex: true })}
+                        className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                        title="Download Markdown (.md) with unrendered LaTeX ($...$)"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download .md
+                      </button>
+
+                      <button
+                        onClick={() => contentStore.downloadItem(item, { format: 'html', unrenderLatex: true })}
+                        className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Download clean HTML (.html) with unrendered LaTeX"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        .html
+                      </button>
+
+                      <button
+                        onClick={() => contentStore.downloadItem(item, { format: 'json', unrenderLatex: true })}
+                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Download as JSON record with unrendered LaTeX"
+                      >
+                        JSON
+                      </button>
+
+                      <button
                         onClick={() => loadItemIntoEditor(item)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-purple-50 text-gray-700 hover:text-purple-700 rounded-xl border border-gray-200 transition-colors font-medium text-xs cursor-pointer"
+                        className="p-2 bg-gray-50 hover:bg-purple-50 text-gray-600 hover:text-purple-700 rounded-xl border border-gray-200 transition-colors cursor-pointer"
                         title="Load into Editor to Edit/Update"
                       >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>Edit Content</span>
+                        <Edit3 className="w-4 h-4" />
                       </button>
+
+                      {isMeetAdmin && (
+                        <button
+                          onClick={() => handleDeleteItem(item.id, `${item.chapter} (${item.contentType})`)}
+                          className="p-2 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-xl border border-gray-200 transition-colors cursor-pointer"
+                          title="Delete this material"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

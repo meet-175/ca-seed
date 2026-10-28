@@ -256,117 +256,249 @@ export function cleanLatexFormulas(body: string): string {
     return `$${fixedMath}$`;
   });
 
+  // 4. Normalize legacy PYP tags to standard PYQ
+  res = res.replace(/\bPYP\b/g, 'PYQ');
+
+  // 5. Remove any legacy old SM, new sm, and old & new SM tags
+  res = res
+    .replace(/([/·•|,;\-])\s*\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b\s*([/·•|,;\-])/gi, '$1 ')
+    .replace(/\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b\s*([/·•|,;\-])\s*/gi, '')
+    .replace(/\s*([/·•|,;\-])\s*\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b/gi, '')
+    .replace(/\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b/gi, '')
+    .replace(/<span\b[^>]*>\s*<\/span>/gi, '');
+
   return res;
+}
+
+// Helper to clear all Chartered Seeds session cache keys
+const clearSessionCache = () => {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith('cs_')) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => sessionStorage.removeItem(k));
+  } catch (e) {}
+};
+
+// In-flight query deduplication map to prevent duplicate parallel requests
+const inFlightQueries = new Map<string, Promise<any>>();
+function dedupeQuery<T>(key: string, queryFn: () => Promise<T>): Promise<T> {
+  if (inFlightQueries.has(key)) {
+    return inFlightQueries.get(key) as Promise<T>;
+  }
+  const promise = queryFn().finally(() => {
+    inFlightQueries.delete(key);
+  });
+  inFlightQueries.set(key, promise);
+  return promise;
 }
 
 export const contentStore = {
   saveContent: async (item: Omit<ContentItem, 'id' | 'createdAt'>) => {
-    const newId = Math.random().toString(36).substr(2, 9);
+    let targetId = Math.random().toString(36).substr(2, 9);
+    try {
+      const q = query(
+        collection(db, 'content'),
+        where('level', '==', item.level),
+        where('subject', '==', item.subject),
+        where('chapter', '==', item.chapter),
+        where('contentType', '==', item.contentType)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        targetId = snap.docs[0].id;
+      }
+    } catch (e) {}
+
     const cleanedBody = cleanLatexFormulas(item.body);
     const newItem: ContentItem = {
       ...item,
       body: cleanedBody,
-      id: newId,
+      id: targetId,
       createdAt: Date.now(),
     };
     
-    await setDoc(doc(db, 'content', newId), newItem);
+    await setDoc(doc(db, 'content', targetId), newItem);
     
     // Invalidate caches
     cache.allContent = null;
     cache.levelContent = {};
     cache.chapterContent = {};
     cache.specificContent = {};
+    clearSessionCache();
     
     return newItem;
   },
   
   getAllContent: async (): Promise<ContentItem[]> => {
     if (cache.allContent) return cache.allContent;
+
+    // Check sessionStorage cache (1 hour TTL)
     try {
-      const q = query(collection(db, 'content'), orderBy('createdAt', 'desc'));
-      const snapshot = await fetchWithCacheFallback(q);
-      const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
-      cache.allContent = data;
-      return data;
-    } catch (error) {
-      console.error("Error getting content:", error);
-      return [];
-    }
+      const cached = sessionStorage.getItem('cs_all_content');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 3600000) {
+          cache.allContent = parsed.data;
+          return parsed.data;
+        }
+      }
+    } catch (e) {}
+
+    return dedupeQuery('all_content', async () => {
+      try {
+        const q = query(collection(db, 'content'), orderBy('createdAt', 'desc'));
+        const snapshot = await fetchWithCacheFallback(q);
+        const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
+        cache.allContent = data;
+        try {
+          sessionStorage.setItem('cs_all_content', JSON.stringify({ timestamp: Date.now(), data }));
+        } catch (e) {}
+        return data;
+      } catch (error) {
+        console.error("Error getting content:", error);
+        return [];
+      }
+    });
   },
 
   getContentByLevel: async (levelId: string): Promise<ContentItem[]> => {
     if (cache.levelContent[levelId]) return cache.levelContent[levelId];
-    
+
     const formattedLevelId = 
       levelId === 'News & Updates' ? 'News & Updates' :
       (levelId === 'foundation' || levelId === 'CA Foundation') ? 'CA Foundation' :
       (levelId === 'intermediate' || levelId === 'CA Intermediate') ? 'CA Intermediate' :
       (levelId === 'final' || levelId === 'CA Final') ? 'CA Final' : levelId;
-      
+
+    // Check sessionStorage to reduce Firebase read quota consumption
     try {
-      const q = query(collection(db, 'content'), where('level', '==', formattedLevelId));
-      const snapshot = await fetchWithCacheFallback(q);
-      const data = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
-      cache.levelContent[levelId] = data;
-      return data;
-    } catch (error) {
-      console.error("Error getting content by level:", error);
-      return [];
-    }
+      const cached = sessionStorage.getItem(`cs_lvl_${formattedLevelId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 3600000) { // 1 hour TTL
+          const rawCached = parsed.data || [];
+          // Deduplicate cached data by subject and chapter to ensure zero duplicates
+          const seenKeys = new Set<string>();
+          const deduped: ContentItem[] = [];
+          for (const item of rawCached) {
+            const key = `${(item.subject || '').trim().toLowerCase()}:::${(item.chapter || '').trim().toLowerCase()}`;
+            if (!seenKeys.has(key)) {
+              seenKeys.add(key);
+              deduped.push(item);
+            }
+          }
+          cache.levelContent[levelId] = deduped;
+          return deduped;
+        }
+      }
+    } catch (e) {}
+
+    return dedupeQuery(`lvl_${formattedLevelId}`, async () => {
+      try {
+        const q = query(collection(db, 'content'), where('level', '==', formattedLevelId));
+        const snapshot = await fetchWithCacheFallback(q);
+        const rawDocs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
+        // Sort newest first
+        rawDocs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        // Deduplicate by ID and subject+chapter
+        const seenIds = new Set<string>();
+        const seenKeys = new Set<string>();
+        const data: ContentItem[] = [];
+        for (const item of rawDocs) {
+          const key = `${(item.subject || '').trim().toLowerCase()}:::${(item.chapter || '').trim().toLowerCase()}`;
+          if (!seenIds.has(item.id) && !seenKeys.has(key)) {
+            seenIds.add(item.id);
+            seenKeys.add(key);
+            data.push(item);
+          }
+        }
+        cache.levelContent[levelId] = data;
+        try {
+          sessionStorage.setItem(`cs_lvl_${formattedLevelId}`, JSON.stringify({ timestamp: Date.now(), data }));
+        } catch (e) {}
+        return data;
+      } catch (error) {
+        console.error("Error getting content by level:", error);
+        return [];
+      }
+    });
   },
 
   getChapterContent: async (level: string, subject: string, chapter: string): Promise<ContentItem[]> => {
     const cacheKey = `${level}-${subject}-${chapter}`;
     if (cache.chapterContent[cacheKey]) return cache.chapterContent[cacheKey];
 
+    // Check sessionStorage
     try {
-      const q = query(
-        collection(db, 'content'),
-        where('level', '==', level),
-        where('subject', '==', subject),
-        where('chapter', '==', chapter)
-      );
-      const snapshot = await fetchWithCacheFallback(q);
-      const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
-      // Group by contentType and return the most recent of each type
-      const grouped = items.reduce((acc, item) => {
-        if (!acc[item.contentType] || acc[item.contentType].createdAt < item.createdAt) {
-          acc[item.contentType] = item;
+      const cached = sessionStorage.getItem(`cs_chap_${cacheKey}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 3600000) {
+          cache.chapterContent[cacheKey] = parsed.data;
+          return parsed.data;
         }
-        return acc;
-      }, {} as Record<string, ContentItem>);
-      const result = Object.values(grouped);
-      cache.chapterContent[cacheKey] = result;
-      return result;
-    } catch (error) {
-      console.error("Error getting chapter content:", error);
-      return [];
-    }
+      }
+    } catch (e) {}
+
+    return dedupeQuery(`chap_${cacheKey}`, async () => {
+      try {
+        const q = query(
+          collection(db, 'content'),
+          where('level', '==', level),
+          where('subject', '==', subject),
+          where('chapter', '==', chapter)
+        );
+        const snapshot = await fetchWithCacheFallback(q);
+        const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
+        // Group by contentType and return the most recent of each type
+        const grouped = items.reduce((acc, item) => {
+          if (!acc[item.contentType] || acc[item.contentType].createdAt < item.createdAt) {
+            acc[item.contentType] = item;
+          }
+          return acc;
+        }, {} as Record<string, ContentItem>);
+        const result = Object.values(grouped);
+        cache.chapterContent[cacheKey] = result;
+        try {
+          sessionStorage.setItem(`cs_chap_${cacheKey}`, JSON.stringify({ timestamp: Date.now(), data: result }));
+        } catch (e) {}
+        return result;
+      } catch (error) {
+        console.error("Error getting chapter content:", error);
+        return [];
+      }
+    });
   },
 
   getContent: async (level: string, subject: string, chapter: string, contentType: string): Promise<ContentItem | undefined> => {
     const cacheKey = `${level}-${subject}-${chapter}-${contentType}`;
     if (cacheKey in cache.specificContent) return cache.specificContent[cacheKey];
 
-    try {
-      const q = query(
-        collection(db, 'content'),
-        where('level', '==', level),
-        where('subject', '==', subject),
-        where('chapter', '==', chapter),
-        where('contentType', '==', contentType)
-      );
-      const snapshot = await fetchWithCacheFallback(q);
-      const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
-      // Return most recent if multiple
-      const result = items.sort((a, b) => b.createdAt - a.createdAt)[0];
-      cache.specificContent[cacheKey] = result;
-      return result;
-    } catch (error) {
-      console.error("Error getting specific content:", error);
-      return undefined;
-    }
+    return dedupeQuery(`item_${cacheKey}`, async () => {
+      try {
+        const q = query(
+          collection(db, 'content'),
+          where('level', '==', level),
+          where('subject', '==', subject),
+          where('chapter', '==', chapter),
+          where('contentType', '==', contentType)
+        );
+        const snapshot = await fetchWithCacheFallback(q);
+        const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
+        // Return most recent if multiple
+        const result = items.sort((a, b) => b.createdAt - a.createdAt)[0];
+        cache.specificContent[cacheKey] = result;
+        return result;
+      } catch (error) {
+        console.error("Error getting specific content:", error);
+        return undefined;
+      }
+    });
   },
 
   deleteContent: async (id: string) => {
@@ -378,6 +510,7 @@ export const contentStore = {
       cache.levelContent = {};
       cache.chapterContent = {};
       cache.specificContent = {};
+      clearSessionCache();
     } catch (error) {
       console.error("Error deleting content:", error);
       throw error;

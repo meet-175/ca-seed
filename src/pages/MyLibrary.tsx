@@ -258,6 +258,14 @@ export default function MyLibrary() {
                           <span className="hidden sm:inline">MCQ</span>
                         </Link>
                       )}
+                      <Link
+                        to={`${readerUrl}#random-topics`}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-violet-50 hover:bg-violet-100 text-violet-700 text-xs font-semibold rounded-lg transition-colors border border-violet-200"
+                        title="Open Random Topic Authors Think Interesting"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Interesting</span>
+                      </Link>
                     </div>
 
                     <Link

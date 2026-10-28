@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Header from '../components/Header';
 import AdUnit from '../components/AdUnit';
 import { contentStore, ContentItem } from '../content/store';
-import { ArrowLeft, Search, ChevronDown, MessageCircle, Send, Link as LinkIcon, FileText, HelpCircle, CheckSquare, Activity } from 'lucide-react';
+import { ArrowLeft, Search, ChevronDown, MessageCircle, Send, Link as LinkIcon, FileText, HelpCircle, CheckSquare, Activity, Sparkles } from 'lucide-react';
 import { SYLLABUS } from '../data/syllabus';
 import { cn } from '../lib/utils';
 import { slugify } from '../lib/slugs';
@@ -254,6 +254,7 @@ export default function Level() {
                         const questionBank = getContentItem(chapter, 'Question Bank');
                         const mcqBank = getContentItem(chapter, 'MCQ Bank') || getContentItem(chapter, 'Multiple Choice');
                         const questionDiagnosis = getContentItem(chapter, 'Question Diagnosis');
+                        const randomTopics = getContentItem(chapter, 'Random Topic Authors Think Interesting') || getContentItem(chapter, 'Random Topics Authors Think Interesting');
 
                         return (
                           <div key={chapter} className="border-b last:border-b-0 border-gray-100">
@@ -275,6 +276,9 @@ export default function Level() {
                                   )}
                                   {questionDiagnosis && (
                                     <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-100">Diagnosis</span>
+                                  )}
+                                  {randomTopics && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-violet-50 text-violet-700 px-2 py-0.5 rounded border border-violet-100">Interesting</span>
                                   )}
                                 </div>
                               </div>
@@ -368,6 +372,22 @@ export default function Level() {
                                       <div className="flex-1">
                                         <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Question Diagnosis</h4>
                                         <p className="text-xs md:text-sm text-gray-500">Detailed question breakdowns</p>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Random Topic Authors Think Interesting Card */}
+                                  {randomTopics && (
+                                    <div 
+                                      onClick={() => navigate(`/study/${levelId}/${slugify(selectedSubject)}/${slugify(chapter)}#random-topics`)}
+                                      className="relative p-4 md:p-5 rounded-2xl border transition-all flex items-center gap-4 text-left cursor-pointer bg-white border-violet-100 hover:border-violet-300 hover:shadow-sm"
+                                    >
+                                      <div className="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 shrink-0">
+                                        <Sparkles className="w-6 h-6" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <h4 className="font-bold text-gray-900 text-sm md:text-base mb-0.5">Random Topic Authors Think Interesting</h4>
+                                        <p className="text-xs md:text-sm text-gray-500">Curated conceptual deep-dives and fascinating topic insights</p>
                                       </div>
                                     </div>
                                   )}

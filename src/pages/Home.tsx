@@ -13,10 +13,11 @@ import {
   Book, 
   Layers, 
   Target, 
-  ArrowRight,
-  Info,
-  Bell,
-  Bookmark
+  ArrowRight, 
+  Info, 
+  Bell, 
+  Bookmark, 
+  Sparkles
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useBookmarks } from '../lib/libraryStore';
@@ -148,6 +149,14 @@ export default function Home() {
               Popular Searches:
             </span>
             <Link
+              to="/interesting-topics"
+              className="px-3.5 py-1 rounded-full text-xs font-bold transition-all hover:scale-105 shadow-sm flex items-center gap-1.5"
+              style={{ backgroundColor: '#FF7F50', color: '#ffffff' }}
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-white text-white" />
+              <span>Random Topics Authors Think Interesting</span>
+            </Link>
+            <Link
               to="/level/intermediate?subject=taxation"
               className="px-3 py-1 rounded-full text-xs font-semibold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition-all hover:scale-105"
             >
@@ -276,64 +285,207 @@ export default function Home() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Foundation Card */}
-          <Link to="/level/foundation" className="group flex flex-col bg-white border border-gray-100 p-8 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center mb-6">
-              <Book className="w-7 h-7" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          {/* Foundation Card - Coral Glow */}
+          <Link 
+            to="/level/foundation" 
+            className="group flex flex-col bg-white border border-gray-100 p-7 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#FF7F50';
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(255, 127, 80, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#f3f4f6';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-105"
+              style={{ backgroundColor: 'rgba(255, 127, 80, 0.14)', color: '#FF7F50' }}
+            >
+              <Book className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">CA Foundation</h3>
-            <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Access <strong className="text-gray-700 font-semibold">free CA Foundation question bank with answers</strong>, chapter-wise notes, and <strong className="text-gray-700 font-semibold">Business Economics MCQs</strong>.
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#FF7F50] transition-colors">CA Foundation</h3>
+              <span 
+                className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: 'rgba(255, 127, 80, 0.15)', color: '#FF7F50' }}
+              >
+                Coral Glow
+              </span>
+            </div>
+            <p className="text-gray-500 font-medium text-xs leading-relaxed mb-8 flex-1">
+              Access <strong className="text-gray-700 font-semibold">free CA Foundation question bank with answers</strong>, chapter notes & Economics MCQs.
             </p>
-            <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-blue-600 transition-colors">
+            <div 
+              className="flex items-center text-xs font-bold transition-all group-hover:translate-x-0.5"
+              style={{ color: '#FF7F50' }}
+            >
               View Resources
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
-          {/* Intermediate Card */}
-          <Link to="/level/intermediate" className="group flex flex-col bg-white border border-gray-100 p-8 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-            <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-6">
-              <Layers className="w-7 h-7" />
+          {/* Intermediate Card - Arctic Ice */}
+          <Link 
+            to="/level/intermediate" 
+            className="group flex flex-col bg-white border border-gray-100 p-7 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#38bdf8';
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(214, 245, 255, 0.8)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#f3f4f6';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-105"
+              style={{ backgroundColor: '#D6F5FF', color: '#0284c7' }}
+            >
+              <Layers className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">CA Intermediate</h3>
-            <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Get <strong className="text-gray-700 font-semibold">chapter-wise free CA Inter notes</strong>, <strong className="text-gray-700 font-semibold">CA Inter Taxation PYQ</strong>, <strong className="text-gray-700 font-semibold">Advanced Accounting notes</strong>, and Corporate Laws.
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#0284c7] transition-colors">CA Intermediate</h3>
+              <span 
+                className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: '#D6F5FF', color: '#0369a1' }}
+              >
+                Arctic Ice
+              </span>
+            </div>
+            <p className="text-gray-500 font-medium text-xs leading-relaxed mb-8 flex-1">
+              Chapter-wise notes, <strong className="text-gray-700 font-semibold">Taxation PYQ</strong>, <strong className="text-gray-700 font-semibold">Advanced Accounting</strong> and Corporate Laws.
             </p>
-            <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-purple-600 transition-colors">
+            <div 
+              className="flex items-center text-xs font-bold transition-all group-hover:translate-x-0.5"
+              style={{ color: '#0284c7' }}
+            >
               View Resources
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
-          {/* Final Card */}
-          <Link to="/level/final" className="group flex flex-col bg-white border border-gray-100 p-8 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-            <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-6">
-              <Target className="w-7 h-7" />
+          {/* Final Card - Lavender Dream */}
+          <Link 
+            to="/level/final" 
+            className="group flex flex-col bg-white border border-gray-100 p-7 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#C8A2FF';
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(200, 162, 255, 0.35)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#f3f4f6';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-105"
+              style={{ backgroundColor: 'rgba(200, 162, 255, 0.25)', color: '#7c3aed' }}
+            >
+              <Target className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">CA Final</h3>
-            <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Comprehensive <strong className="text-gray-700 font-semibold">CA Final free study material</strong>, Advanced Auditing, Direct Tax PYQs, and Integrated Business Solutions.
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#7c3aed] transition-colors">CA Final</h3>
+              <span 
+                className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: 'rgba(200, 162, 255, 0.25)', color: '#6d28d9' }}
+              >
+                Lavender Dream
+              </span>
+            </div>
+            <p className="text-gray-500 font-medium text-xs leading-relaxed mb-8 flex-1">
+              Comprehensive study material, <strong className="text-gray-700 font-semibold">Advanced Auditing</strong>, Direct Tax PYQs & IBS case studies.
             </p>
-            <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-red-500 transition-colors">
+            <div 
+              className="flex items-center text-xs font-bold transition-all group-hover:translate-x-0.5"
+              style={{ color: '#7c3aed' }}
+            >
               View Resources
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
-          {/* News & Updates Card */}
-          <Link to="/news" className="group flex flex-col bg-white border border-gray-100 p-8 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-            <div className="w-14 h-14 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center mb-6">
-              <Bell className="w-7 h-7" />
+          {/* News & Updates Card - Sunset Hazel */}
+          <Link 
+            to="/news" 
+            className="group flex flex-col bg-white border border-gray-100 p-7 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#A97142';
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(169, 113, 66, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#f3f4f6';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-105"
+              style={{ backgroundColor: 'rgba(169, 113, 66, 0.16)', color: '#A97142' }}
+            >
+              <Bell className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">News & Updates</h3>
-            <p className="text-gray-500 font-medium leading-relaxed mb-10 flex-1">
-              Stay up-to-date with the latest exam announcements and syllabus changes.
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#A97142] transition-colors">News & Updates</h3>
+              <span 
+                className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: 'rgba(169, 113, 66, 0.16)', color: '#8c592e' }}
+              >
+                Sunset Hazel
+              </span>
+            </div>
+            <p className="text-gray-500 font-medium text-xs leading-relaxed mb-8 flex-1">
+              Stay up-to-date with the latest exam announcements, circulars and syllabus changes.
             </p>
-            <div className="flex items-center text-sm font-bold text-gray-600 group-hover:text-yellow-600 transition-colors">
+            <div 
+              className="flex items-center text-xs font-bold transition-all group-hover:translate-x-0.5"
+              style={{ color: '#A97142' }}
+            >
               View Updates
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Random Topics Authors Think Interesting Card - positioned right after News & Updates */}
+          <Link 
+            to="/interesting-topics" 
+            className="group flex flex-col bg-white border border-gray-100 p-7 rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#FF7F50';
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(255, 127, 80, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#f3f4f6';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-105"
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.2), rgba(200, 162, 255, 0.3))', 
+                color: '#FF7F50' 
+              }}
+            >
+              <Sparkles className="w-6 h-6 fill-[#FF7F50] text-[#FF7F50]" />
+            </div>
+            <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#FF7F50] transition-colors">Random Topics</h3>
+              <span 
+                className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: '#D6F5FF', color: '#0369a1' }}
+              >
+                Author's Pick
+              </span>
+            </div>
+            <p className="text-gray-500 font-medium text-xs leading-relaxed mb-8 flex-1">
+              Curated Finance, Law, Corporate, Accounting & Auditing deep dives beyond the syllabus.
+            </p>
+            <div 
+              className="flex items-center text-xs font-bold transition-all group-hover:translate-x-0.5"
+              style={{ color: '#FF7F50' }}
+            >
+              Explore Topics
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
         </div>

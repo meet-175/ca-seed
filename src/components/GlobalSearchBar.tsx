@@ -35,6 +35,7 @@ export interface SearchResultItem {
   hasQuestions?: boolean;
   hasMcq?: boolean;
   hasDiagnosis?: boolean;
+  hasRandomTopics?: boolean;
 }
 
 export default function GlobalSearchBar() {
@@ -49,18 +50,18 @@ export default function GlobalSearchBar() {
   const navigate = useNavigate();
   const { checkBookmarked } = useBookmarks();
 
-  // Load existing uploaded content asynchronously to enhance search with real database links
-  useEffect(() => {
-    let isMounted = true;
+  const hasLoadedContent = useRef(false);
+  const loadStoreContent = () => {
+    if (hasLoadedContent.current) return;
+    hasLoadedContent.current = true;
     contentStore.getAllContent().then(items => {
-      if (isMounted && items) {
+      if (items) {
         setStoreContent(items);
       }
     }).catch(() => {
       // Syllabus fallback works completely offline
     });
-    return () => { isMounted = false; };
-  }, []);
+  };
 
   // Global keyboard shortcut (Ctrl+K or Cmd+K or /) to focus search
   useEffect(() => {
@@ -77,10 +78,12 @@ export default function GlobalSearchBar() {
 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
+        loadStoreContent();
         inputRef.current?.focus();
         setIsOpen(true);
       } else if (e.key === '/' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
+        loadStoreContent();
         inputRef.current?.focus();
         setIsOpen(true);
       }
@@ -155,9 +158,15 @@ export default function GlobalSearchBar() {
               c.chapter === chap && 
               c.contentType === 'Question Diagnosis'
             );
+            const hasRandomTopics = storeContent.some(c => 
+              c.level === lvl.name && 
+              c.subject === subj.name && 
+              c.chapter === chap && 
+              (c.contentType === 'Random Topic Authors Think Interesting' || c.contentType === 'Random Topics Authors Think Interesting')
+            );
 
             // Hide chapters with no materials from the search index
-            if (!hasNotes && !hasQuestions && !hasMcq && !hasDiagnosis) {
+            if (!hasNotes && !hasQuestions && !hasMcq && !hasDiagnosis && !hasRandomTopics) {
               return;
             }
 
@@ -174,7 +183,8 @@ export default function GlobalSearchBar() {
               hasNotes,
               hasQuestions,
               hasMcq,
-              hasDiagnosis
+              hasDiagnosis,
+              hasRandomTopics
             });
           });
         });
@@ -320,8 +330,12 @@ export default function GlobalSearchBar() {
           onChange={(e) => {
             setQuery(e.target.value);
             if (!isOpen) setIsOpen(true);
+            loadStoreContent();
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            setIsOpen(true);
+            loadStoreContent();
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Search topics, chapters, or subjects (e.g. Depreciation, Contract Act, Taxation)..."
           className="w-full py-4 sm:py-4.5 pl-3 sm:pl-4 pr-24 text-gray-900 placeholder-gray-400 font-medium text-sm sm:text-base bg-transparent focus:outline-none"
@@ -610,6 +624,18 @@ export default function GlobalSearchBar() {
                             >
                               <Activity className="w-3.5 h-3.5" />
                               <span>Diagnosis</span>
+                            </button>
+                          )}
+
+                          {item.hasRandomTopics && (
+                            <button
+                              type="button"
+                              onClick={() => handleSelectResult(item, 'random-topics')}
+                              title="Open Random Topic Authors Think Interesting"
+                              className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-violet-50 hover:bg-violet-100 text-violet-700 font-semibold text-xs rounded-lg border border-violet-200 transition-colors"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Interesting</span>
                             </button>
                           )}
 

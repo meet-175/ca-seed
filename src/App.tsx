@@ -5,20 +5,35 @@
 
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { useEffect } from 'react';
-import Home from './pages/Home';
-import Admin from './pages/Admin';
-import Level from './pages/Level';
-import Reader from './pages/Reader';
-import News from './pages/News';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsConditions from './pages/TermsConditions';
-import Disclaimer from './pages/Disclaimer';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
-import ContentTester from './pages/ContentTester';
-import MyLibrary from './pages/MyLibrary';
+import { useEffect, lazy, Suspense } from 'react';
 import AntiScreenshotShield from './components/AntiScreenshotShield';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy-loaded routes for optimal bundle splitting and performance
+const Home = lazy(() => import('./pages/Home'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Level = lazy(() => import('./pages/Level'));
+const Reader = lazy(() => import('./pages/Reader'));
+const News = lazy(() => import('./pages/News'));
+const InterestingTopics = lazy(() => import('./pages/InterestingTopics'));
+const MyLibrary = lazy(() => import('./pages/MyLibrary'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const Disclaimer = lazy(() => import('./pages/Disclaimer'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const ContentTester = lazy(() => import('./pages/ContentTester'));
+
+function PageLoader() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center p-8">
+      <div className="w-9 h-9 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-3" />
+      <span className="text-xs font-semibold text-gray-400 tracking-wider uppercase animate-pulse">
+        Loading Chartered Seeds...
+      </span>
+    </div>
+  );
+}
 
 export default function App() {
   useEffect(() => {
@@ -70,23 +85,29 @@ export default function App() {
         <AntiScreenshotShield />
         <div className="flex flex-col min-h-screen">
           <div className="flex-1">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/library" element={<MyLibrary />} />
-              <Route path="/level/:levelId" element={<Level />} />
-              {/* New Cleaner URL Route */}
-              <Route path="/study/:levelId/:subjectSlug/:chapterSlug" element={<Reader />} />
-              {/* Legacy fallback route */}
-              <Route path="/read/:levelId" element={<Reader />} />
-              <Route path="/news" element={<News />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-conditions" element={<TermsConditions />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route path="/about-us" element={<AboutUs />} />
-              <Route path="/contact-us" element={<ContactUs />} />
-              <Route path="/tester" element={<ContentTester />} />
-            </Routes>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/library" element={<MyLibrary />} />
+                  <Route path="/level/:levelId" element={<Level />} />
+                  {/* New Cleaner URL Route */}
+                  <Route path="/study/:levelId/:subjectSlug/:chapterSlug" element={<Reader />} />
+                  {/* Legacy fallback route */}
+                  <Route path="/read/:levelId" element={<Reader />} />
+                  <Route path="/news" element={<News />} />
+                  <Route path="/interesting-topics" element={<InterestingTopics />} />
+                  <Route path="/random-topics" element={<InterestingTopics />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-conditions" element={<TermsConditions />} />
+                  <Route path="/disclaimer" element={<Disclaimer />} />
+                  <Route path="/about-us" element={<AboutUs />} />
+                  <Route path="/contact-us" element={<ContactUs />} />
+                  <Route path="/tester" element={<ContentTester />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </div>
           {/* Legal & Navigation Footer */}
           <footer className="bg-gray-50 border-t border-gray-200 py-8 px-4 mt-auto">

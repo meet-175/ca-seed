@@ -15,8 +15,17 @@ export default function News() {
 
   useEffect(() => {
     contentStore.getContentByLevel('News & Updates').then((content) => {
-      const sorted = content.sort((a, b) => b.createdAt - a.createdAt);
-      setNewsItems(sorted);
+      const sorted = content
+        .filter(item => !item.chapter.toLowerCase().includes("cbdt's big deadline relief"))
+        .sort((a, b) => b.createdAt - a.createdAt);
+      const seen = new Set<string>();
+      const unique = sorted.filter(item => {
+        const key = `${item.subject}-${item.chapter}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setNewsItems(unique);
       setIsLoading(false);
     });
   }, []);
@@ -75,7 +84,7 @@ export default function News() {
             {currentNews.map((news) => (
               <Link 
                 key={news.id || news.createdAt} 
-                to={`/read/News & Updates?subject=${encodeURIComponent(news.subject)}&chapter=${encodeURIComponent(news.chapter)}`}
+                to={`/read/${encodeURIComponent('News & Updates')}?subject=${encodeURIComponent(news.subject)}&chapter=${encodeURIComponent(news.chapter)}`}
                 className="group flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-2xl bg-white border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all gap-4"
               >
                 <div className="flex flex-col gap-3">
