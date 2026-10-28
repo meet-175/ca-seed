@@ -1,4 +1,4 @@
-import { Bookmark } from 'lucide-react';
+import { Bookmark, Settings, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useBookmarks } from '../lib/libraryStore';
@@ -97,6 +97,10 @@ export default function Header({ className }: HeaderProps) {
       <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-purple-100">
         <Link to="/level/foundation" className="hover:text-white transition-colors">CA Foundation</Link>
         <Link to="/level/intermediate" className="hover:text-white transition-colors">CA Intermediate</Link>
+        <Link to="/interesting-topics" className="hover:text-amber-200 transition-colors flex items-center gap-1.5 text-amber-300 font-bold" title="Articles on Finance, Law, Corporate, Accounting & Auditing beyond the CA Syllabus">
+          <Sparkles className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+          <span>Interesting Topics</span>
+        </Link>
         <Link to="/news" className="hover:text-white transition-colors">ICAI Updates</Link>
       </nav>
 

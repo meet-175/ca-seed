@@ -18,9 +18,8 @@ export const ADS_CONFIG = {
   // Master toggle to enable/disable all ads
   enabled: true,
 
-  // Replace with your real Google AdSense Publisher ID (e.g., 'ca-pub-1234567890123456')
-  // or provide VITE_ADSENSE_CLIENT_ID in your environment variables.
-  clientId: ((import.meta as any).env?.VITE_ADSENSE_CLIENT_ID as string) || '',
+  // Google AdSense Publisher ID
+  clientId: ((import.meta as any).env?.VITE_ADSENSE_CLIENT_ID as string) || 'ca-pub-2746736313963627',
 
   // If true, shows high-converting, realistic sponsor placeholders when no live AdSense ID is active.
   showFallbackPreviews: true,

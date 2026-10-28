@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Trash2, Download, Bookmark, BookmarkCheck } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, CheckSquare, FileText, Send, Link as LinkIcon, Activity, Trash2, Download, Bookmark, BookmarkCheck, Sparkles } from 'lucide-react';
 import { useBookmarks } from '../lib/libraryStore';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -37,7 +37,8 @@ const SECTION_CONFIG = [
   { id: 'study-notes', type: 'Study Notes', icon: FileText, colorClass: 'bg-pink-50 text-pink-600' },
   { id: 'question-bank', type: 'Question Bank', icon: HelpCircle, colorClass: 'bg-orange-50 text-orange-600' },
   { id: 'mcq-bank', type: 'MCQ Bank', altType: 'Multiple Choice', icon: CheckSquare, colorClass: 'bg-blue-50 text-blue-600' },
-  { id: 'question-diagnosis', type: 'Question Diagnosis', icon: Activity, colorClass: 'bg-emerald-50 text-emerald-600' }
+  { id: 'question-diagnosis', type: 'Question Diagnosis', icon: Activity, colorClass: 'bg-emerald-50 text-emerald-600' },
+  { id: 'random-topics', type: 'Random Topic Authors Think Interesting', altType: 'Article / Deep Dive', icon: Sparkles, colorClass: 'bg-violet-50 text-violet-600' }
 ];
 
 const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: ContentItem; config: any; chapter: string; isAdmin?: boolean; onDelete?: (id: string) => void }) => {
@@ -59,6 +60,13 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
     if (str.startsWith('```html')) {
       str = str.replace(/^```html\s*/i, '').replace(/```\s*$/i, '').trim();
     }
+    str = str.replace(/\bPYP\b/g, 'PYQ');
+    str = str
+      .replace(/([/·•|,;\-])\s*\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b\s*([/·•|,;\-])/gi, '$1 ')
+      .replace(/\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b\s*([/·•|,;\-])\s*/gi, '')
+      .replace(/\s*([/·•|,;\-])\s*\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b/gi, '')
+      .replace(/\b(?:old\s*(?:&|and|\/|\+)?\s*new|new\s*(?:&|and|\/|\+)?\s*old|old|new)\s+sm\b/gi, '')
+      .replace(/<span\b[^>]*>\s*<\/span>/gi, '');
     return str;
   }, [item.body]);
 
@@ -70,8 +78,8 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
   const normalizedMarkdownBody = useMemo(() => {
     if (!cleanBody) return '';
     return cleanBody
-      .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$')
-      .replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+      .replace(/\\\[([\s\S]*?)\\\]/g, (_m, p1) => `$$${p1}$$`)
+      .replace(/\\\(([\s\S]*?)\\\)/g, (_m, p1) => `$${p1}$`);
   }, [cleanBody]);
 
   const injectedHtml = useMemo(() => {
@@ -133,17 +141,19 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
       `;
     };
 
-    // Find questions starting with <h3> tag and inject an ad after every 2 questions
+    // Only inject in-question ad breaks for question bank content, never for articles/deep-dives
     let processedBody = cleanBody;
-    let questionH3Count = 0;
-    processedBody = processedBody.replace(/(<h3\b[^>]*>)/gi, (match) => {
-      questionH3Count++;
-      // Inject ad after every 2 questions (before question 3, 5, 7, 9...)
-      if (questionH3Count > 1 && (questionH3Count - 1) % 2 === 0) {
-        return getInjectedQuestionAd(Math.floor(questionH3Count / 2)) + match;
-      }
-      return match;
-    });
+    if (config.id === 'question-bank') {
+      let questionH3Count = 0;
+      processedBody = processedBody.replace(/(<h3\b[^>]*>)/gi, (match) => {
+        questionH3Count++;
+        // Inject ad after every 2 questions (before question 3, 5, 7, 9...)
+        if (questionH3Count > 1 && (questionH3Count - 1) % 2 === 0) {
+          return getInjectedQuestionAd(Math.floor(questionH3Count / 2)) + match;
+        }
+        return match;
+      });
+    }
 
     const injection = `
       <style>
@@ -257,8 +267,8 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
         setTimeout(renderMath, 800);
       </script>
     `;
-    if (processedBody.toLowerCase().includes('</head>')) {
-      return processedBody.replace(/<\/head>/i, `${injection}</head>`);
+    if (/<\/head>/i.test(processedBody)) {
+      return processedBody.replace(/<\/head>/i, () => `${injection}</head>`);
     }
     return `<head>${injection}</head>${processedBody}`;
   }, [cleanBody, isHtmlContent]);
@@ -306,13 +316,21 @@ const ContentSection = ({ item, config, chapter, isAdmin, onDelete }: { item: Co
 
   return (
     <div id={config.id} className="scroll-mt-48 mb-16">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${config.colorClass}`}>
-            <config.icon className="w-5 h-5" />
+      <div className={cn("flex items-center justify-between", config.id === 'random-topics' ? "mb-3" : "mb-6")}>
+        {config.id !== 'random-topics' ? (
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${config.colorClass}`}>
+              <config.icon className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">{config.type}</h2>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">{config.type}</h2>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-150">
+              Author's Special Deep-Dive
+            </span>
+          </div>
+        )}
       </div>
       <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-10 shadow-sm min-h-[200px]">
         {isHtmlContent ? (
@@ -381,7 +399,17 @@ export default function Reader() {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const formattedLevelName = levelId === 'News & Updates'
+  const decodedLevel = decodeURIComponent(levelId || '');
+  const isInteresting = levelId === 'Random Topic Authors Think Interesting' || 
+                        decodedLevel === 'Random Topic Authors Think Interesting' ||
+                        levelId?.toLowerCase() === 'random-topics' ||
+                        levelId?.toLowerCase() === 'interesting-topics' ||
+                        decodedLevel?.toLowerCase() === 'random-topics' ||
+                        decodedLevel?.toLowerCase() === 'interesting-topics';
+  const isNews = levelId === 'News & Updates' || decodedLevel === 'News & Updates' || levelId === 'news';
+  const formattedLevelName = isInteresting
+    ? 'Random Topic Authors Think Interesting'
+    : isNews
     ? 'News & Updates'
     : levelId === 'foundation' 
     ? 'CA Foundation' 
@@ -411,10 +439,34 @@ export default function Reader() {
   useEffect(() => {
     setLoading(true);
     
+    // Check if it's an Interesting Topic (Beyond Syllabus)
+    if (isInteresting || formattedLevelName === 'Random Topic Authors Think Interesting') {
+      contentStore.getContentByLevel('Random Topic Authors Think Interesting').then(items => {
+        const matching = items
+          .filter(item => {
+            const matchSubject = subject ? item.subject.trim().toLowerCase() === subject.trim().toLowerCase() : true;
+            const matchChapter = item.chapter.trim().toLowerCase() === chapter.trim().toLowerCase();
+            return matchSubject && matchChapter;
+          })
+          .sort((a, b) => b.createdAt - a.createdAt);
+        const article = matching[0] || items.find(item => slugify(item.chapter) === slugify(chapter));
+        if (article) {
+          setContentItems([article]);
+        } else {
+          setContentItems([]);
+        }
+        setLoading(false);
+      });
+      return;
+    }
+
     // Check if it's a News Article
     if (formattedLevelName === 'News & Updates') {
       contentStore.getContentByLevel('News & Updates').then(items => {
-        const article = items.find(item => item.subject === subject && item.chapter === chapter);
+        const matching = items
+          .filter(item => item.subject === subject && item.chapter === chapter)
+          .sort((a, b) => b.createdAt - a.createdAt);
+        const article = matching[0];
         if (article) {
           setContentItems([article]);
         } else {
@@ -559,10 +611,23 @@ export default function Reader() {
     });
   }, [isFoundation]);
 
-  const activeSections = visibleConfigs.map(config => {
-    const item = contentItems.find(c => c.contentType === config.type || c.contentType === config.altType);
-    return { config, item };
-  }).filter(section => section.item !== undefined);
+  const activeSections = useMemo(() => {
+    if (isInteresting) {
+      if (contentItems.length === 0) return [];
+      const item = contentItems[0];
+      const config = SECTION_CONFIG.find(c => c.id === 'random-topics') || {
+        id: 'random-topics',
+        type: 'Random Topic Authors Think Interesting',
+        icon: Sparkles,
+        colorClass: 'bg-violet-50 text-violet-600'
+      };
+      return [{ config, item }];
+    }
+    return visibleConfigs.map(config => {
+      const item = contentItems.find(c => c.contentType === config.type || c.contentType === config.altType);
+      return { config, item };
+    }).filter(section => section.item !== undefined);
+  }, [isInteresting, visibleConfigs, contentItems]);
 
   const readerTitle = useMemo(() => {
     if (!chapter) return 'Free CA Study Material & Question Bank - Chartered Seeds';
@@ -619,7 +684,7 @@ export default function Reader() {
       <div className="bg-white border-b border-gray-200 py-3 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-20 shadow-sm gap-3">
         <div className="flex items-center justify-between md:justify-start gap-3">
           <button 
-            onClick={() => navigate(levelId === 'News & Updates' ? '/news' : `/level/${levelId}`)} 
+            onClick={() => navigate(isInteresting ? '/interesting-topics' : levelId === 'News & Updates' ? '/news' : `/level/${levelId}`)} 
             className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-purple-700 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -642,7 +707,7 @@ export default function Reader() {
           </button>
           
           <div className="hidden md:block text-xs font-semibold text-gray-500 tracking-wider">
-            <span className="uppercase">{formattedLevelName}</span> <span className="mx-1 text-gray-300">&gt;</span> {subject}
+            <span className="uppercase">{isInteresting ? "AUTHORS' PICKS (BEYOND SYLLABUS)" : formattedLevelName}</span> <span className="mx-1 text-gray-300">&gt;</span> {subject}
           </div>
         </div>
 
