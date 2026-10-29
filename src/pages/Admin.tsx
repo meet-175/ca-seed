@@ -180,6 +180,45 @@ export default function Admin() {
     }
   };
 
+  const [isDeduplicating, setIsDeduplicating] = useState(false);
+
+  const handleDeduplicateContent = async () => {
+    setIsDeduplicating(true);
+    setAuditMessage('Scanning database and removing older duplicate versions...');
+    try {
+      const items = await contentStore.getAllContent(true);
+      const groups = new Map<string, ContentItem[]>();
+      for (const item of items) {
+        const key = `${item.level.trim()}:::${item.subject.trim()}:::${item.chapter.trim()}:::${item.contentType.trim()}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(item);
+      }
+
+      let deletedCount = 0;
+      for (const [, groupItems] of groups.entries()) {
+        if (groupItems.length > 1) {
+          groupItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          for (let i = 1; i < groupItems.length; i++) {
+            await deleteDoc(doc(db, 'content', groupItems[i].id));
+            deletedCount++;
+          }
+        }
+      }
+
+      contentStore.invalidateCache();
+      if (deletedCount > 0) {
+        setAuditMessage(`Successfully purged ${deletedCount} older duplicate materials! Only the latest materials are live.`);
+        loadAllItems();
+      } else {
+        setAuditMessage('Verified: Zero duplicate materials. All live chapters have their latest content synchronized.');
+      }
+    } catch (err: any) {
+      setAuditMessage(`Deduplication error: ${err.message || 'Operation failed'}`);
+    } finally {
+      setIsDeduplicating(false);
+    }
+  };
+
   const availableSubjects = useMemo(() => {
     if (level === 'Random Topic Authors Think Interesting') {
       return [
@@ -284,7 +323,7 @@ export default function Admin() {
       });
       setChapter('');
       setBody('');
-      alert('Content uploaded successfully!');
+      alert('Content uploaded successfully! The live site has been synchronized and previous duplicates purged.');
       // Refresh items
       loadAllItems();
     } catch (error: any) {
@@ -483,6 +522,16 @@ export default function Admin() {
           >
             <Sparkles className={`w-4 h-4 ${isAuditingFormulas ? 'animate-spin' : ''}`} />
             {isAuditingFormulas ? 'Auditing...' : 'Audit & Fix Formulas'}
+          </button>
+
+          <button 
+            onClick={handleDeduplicateContent}
+            disabled={isDeduplicating}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg text-xs md:text-sm font-semibold transition-colors disabled:opacity-50"
+            title="Purge older duplicate versions and synchronize the live site"
+          >
+            <RefreshCw className={`w-4 h-4 ${isDeduplicating ? 'animate-spin' : ''}`} />
+            {isDeduplicating ? 'Cleaning...' : 'Clean Duplicates & Sync'}
           </button>
 
           <button 

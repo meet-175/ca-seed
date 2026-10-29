@@ -1,5 +1,6 @@
-import { collection, doc, setDoc, getDocs, getDocsFromCache, query, where, orderBy, Query, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, getDocsFromServer, getDocsFromCache, query, where, orderBy, Query, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { slugify } from '../lib/slugs';
 
 export interface ContentItem {
   id: string;
@@ -29,17 +30,21 @@ const cache: {
   specificContent: {},
 };
 
-// Helper function to handle fallback to cache when quota is exceeded
+// Helper function to handle fetching fresh data from server with fallback to cache
 const fetchWithCacheFallback = async (q: Query) => {
   try {
-    return await getDocs(q);
-  } catch (error: any) {
-    console.warn("Network request failed (possibly quota exceeded), falling back to local cache.", error);
+    return await getDocsFromServer(q);
+  } catch {
     try {
-      return await getDocsFromCache(q);
-    } catch (cacheError) {
-      console.error("Cache fallback also failed:", cacheError);
-      throw error; // Throw original error if cache also fails
+      return await getDocs(q);
+    } catch (error: any) {
+      console.warn("Network request failed, falling back to local cache.", error);
+      try {
+        return await getDocsFromCache(q);
+      } catch (cacheError) {
+        console.error("Cache fallback also failed:", cacheError);
+        throw error;
+      }
     }
   }
 };
@@ -298,51 +303,100 @@ function dedupeQuery<T>(key: string, queryFn: () => Promise<T>): Promise<T> {
 }
 
 export const contentStore = {
-  saveContent: async (item: Omit<ContentItem, 'id' | 'createdAt'>) => {
-    let targetId = Math.random().toString(36).substr(2, 9);
-    try {
-      const q = query(
-        collection(db, 'content'),
-        where('level', '==', item.level),
-        where('subject', '==', item.subject),
-        where('chapter', '==', item.chapter),
-        where('contentType', '==', item.contentType)
-      );
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        targetId = snap.docs[0].id;
-      }
-    } catch (e) {}
-
-    const cleanedBody = cleanLatexFormulas(item.body);
-    const newItem: ContentItem = {
-      ...item,
-      body: cleanedBody,
-      id: targetId,
-      createdAt: Date.now(),
-    };
-    
-    await setDoc(doc(db, 'content', targetId), newItem);
-    
-    // Invalidate caches
+  invalidateCache: () => {
     cache.allContent = null;
     cache.levelContent = {};
     cache.chapterContent = {};
     cache.specificContent = {};
     clearSessionCache();
+  },
+
+  saveContent: async (item: Omit<ContentItem, 'id' | 'createdAt'>) => {
+    const cleanLevel = item.level.trim();
+    const cleanSubject = item.subject.trim();
+    const cleanChapter = item.chapter.trim();
+    const cleanContentType = item.contentType.trim();
+
+    let targetId = Math.random().toString(36).substr(2, 9);
+    const duplicatesToDelete: string[] = [];
+
+    try {
+      const q = query(
+        collection(db, 'content'),
+        where('level', '==', cleanLevel),
+        where('subject', '==', cleanSubject),
+        where('chapter', '==', cleanChapter),
+        where('contentType', '==', cleanContentType)
+      );
+      const snap = await fetchWithCacheFallback(q);
+      if (!snap.empty) {
+        // Sort newest first
+        const sorted = [...snap.docs].sort((a, b) => (b.data().createdAt || 0) - (a.data().createdAt || 0));
+        targetId = sorted[0].id;
+        // Collect any older duplicate docs for immediate deletion
+        for (let i = 1; i < sorted.length; i++) {
+          duplicatesToDelete.push(sorted[i].id);
+        }
+      }
+    } catch (e) {
+      console.warn("Notice in saveContent deduplication check:", e);
+    }
+
+    const cleanedBody = cleanLatexFormulas(item.body);
+    const newItem: ContentItem = {
+      level: cleanLevel,
+      subject: cleanSubject,
+      chapter: cleanChapter,
+      contentType: cleanContentType,
+      body: cleanedBody,
+      id: targetId,
+      createdAt: Date.now(),
+    };
+    
+    // Atomically write the fresh material
+    await setDoc(doc(db, 'content', targetId), newItem);
+    
+    // Purge any older duplicate documents from the database
+    if (duplicatesToDelete.length > 0) {
+      for (const oldId of duplicatesToDelete) {
+        try {
+          await deleteDoc(doc(db, 'content', oldId));
+        } catch (delErr) {
+          console.warn("Could not delete duplicate document:", oldId, delErr);
+        }
+      }
+    }
+
+    // Invalidate all caches immediately
+    cache.allContent = null;
+    cache.levelContent = {};
+    cache.chapterContent = {};
+    cache.specificContent = {};
+    clearSessionCache();
+
+    try {
+      localStorage.setItem('cs_last_content_update', JSON.stringify({
+        timestamp: Date.now(),
+        level: cleanLevel,
+        subject: cleanSubject,
+        chapter: cleanChapter,
+        contentType: cleanContentType
+      }));
+      window.dispatchEvent(new CustomEvent('chartered_seeds_content_updated', { detail: newItem }));
+    } catch (e) {}
     
     return newItem;
   },
   
-  getAllContent: async (): Promise<ContentItem[]> => {
-    if (cache.allContent) return cache.allContent;
+  getAllContent: async (forceFresh: boolean = false): Promise<ContentItem[]> => {
+    if (!forceFresh && cache.allContent) return cache.allContent;
 
-    // Check sessionStorage cache (1 hour TTL)
+    // Check short session cache (30 seconds TTL for fast navigation)
     try {
       const cached = sessionStorage.getItem('cs_all_content');
-      if (cached) {
+      if (cached && !forceFresh) {
         const parsed = JSON.parse(cached);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < 3600000) {
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 30000) {
           cache.allContent = parsed.data;
           return parsed.data;
         }
@@ -366,34 +420,23 @@ export const contentStore = {
     });
   },
 
-  getContentByLevel: async (levelId: string): Promise<ContentItem[]> => {
-    if (cache.levelContent[levelId]) return cache.levelContent[levelId];
-
+  getContentByLevel: async (levelId: string, forceFresh: boolean = false): Promise<ContentItem[]> => {
     const formattedLevelId = 
       levelId === 'News & Updates' ? 'News & Updates' :
       (levelId === 'foundation' || levelId === 'CA Foundation') ? 'CA Foundation' :
       (levelId === 'intermediate' || levelId === 'CA Intermediate') ? 'CA Intermediate' :
       (levelId === 'final' || levelId === 'CA Final') ? 'CA Final' : levelId;
 
-    // Check sessionStorage to reduce Firebase read quota consumption
+    if (!forceFresh && cache.levelContent[formattedLevelId]) return cache.levelContent[formattedLevelId];
+
+    // Check short session cache (30 seconds TTL)
     try {
       const cached = sessionStorage.getItem(`cs_lvl_${formattedLevelId}`);
-      if (cached) {
+      if (cached && !forceFresh) {
         const parsed = JSON.parse(cached);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < 3600000) { // 1 hour TTL
-          const rawCached = parsed.data || [];
-          // Deduplicate cached data by subject and chapter to ensure zero duplicates
-          const seenKeys = new Set<string>();
-          const deduped: ContentItem[] = [];
-          for (const item of rawCached) {
-            const key = `${(item.subject || '').trim().toLowerCase()}:::${(item.chapter || '').trim().toLowerCase()}`;
-            if (!seenKeys.has(key)) {
-              seenKeys.add(key);
-              deduped.push(item);
-            }
-          }
-          cache.levelContent[levelId] = deduped;
-          return deduped;
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 30000) {
+          cache.levelContent[formattedLevelId] = parsed.data;
+          return parsed.data;
         }
       }
     } catch (e) {}
@@ -403,21 +446,23 @@ export const contentStore = {
         const q = query(collection(db, 'content'), where('level', '==', formattedLevelId));
         const snapshot = await fetchWithCacheFallback(q);
         const rawDocs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
+        
         // Sort newest first
         rawDocs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        // Deduplicate by ID and subject+chapter
+
+        // Deduplicate by ID and subject+chapter+contentType so ALL materials are preserved
         const seenIds = new Set<string>();
         const seenKeys = new Set<string>();
         const data: ContentItem[] = [];
         for (const item of rawDocs) {
-          const key = `${(item.subject || '').trim().toLowerCase()}:::${(item.chapter || '').trim().toLowerCase()}`;
+          const key = `${(item.subject || '').trim().toLowerCase()}:::${(item.chapter || '').trim().toLowerCase()}:::${(item.contentType || '').trim().toLowerCase()}`;
           if (!seenIds.has(item.id) && !seenKeys.has(key)) {
             seenIds.add(item.id);
             seenKeys.add(key);
             data.push(item);
           }
         }
-        cache.levelContent[levelId] = data;
+        cache.levelContent[formattedLevelId] = data;
         try {
           sessionStorage.setItem(`cs_lvl_${formattedLevelId}`, JSON.stringify({ timestamp: Date.now(), data }));
         } catch (e) {}
@@ -429,21 +474,14 @@ export const contentStore = {
     });
   },
 
-  getChapterContent: async (level: string, subject: string, chapter: string): Promise<ContentItem[]> => {
-    const cacheKey = `${level}-${subject}-${chapter}`;
-    if (cache.chapterContent[cacheKey]) return cache.chapterContent[cacheKey];
+  getChapterContent: async (level: string, subject: string, chapter: string, forceFresh: boolean = true): Promise<ContentItem[]> => {
+    const trimmedChapter = chapter.trim();
+    const cacheKey = `${level}-${subject}-${trimmedChapter}`;
 
-    // Check sessionStorage
-    try {
-      const cached = sessionStorage.getItem(`cs_chap_${cacheKey}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < 3600000) {
-          cache.chapterContent[cacheKey] = parsed.data;
-          return parsed.data;
-        }
-      }
-    } catch (e) {}
+    // Always fetch fresh on chapter visit to ensure latest admin edits appear immediately
+    if (!forceFresh && cache.chapterContent[cacheKey]) {
+      return cache.chapterContent[cacheKey];
+    }
 
     return dedupeQuery(`chap_${cacheKey}`, async () => {
       try {
@@ -451,22 +489,50 @@ export const contentStore = {
           collection(db, 'content'),
           where('level', '==', level),
           where('subject', '==', subject),
-          where('chapter', '==', chapter)
+          where('chapter', '==', trimmedChapter)
         );
-        const snapshot = await fetchWithCacheFallback(q);
+        let snapshot = await fetchWithCacheFallback(q);
+
+        // Fallback: If 0 docs found with trimmedChapter, query subject and match chapter case-insensitively or via slug
+        if (snapshot.empty) {
+          const fallbackQ = query(
+            collection(db, 'content'),
+            where('level', '==', level),
+            where('subject', '==', subject)
+          );
+          const fallbackSnap = await fetchWithCacheFallback(fallbackQ);
+          const targetSlug = slugify(trimmedChapter);
+          const targetLower = trimmedChapter.toLowerCase();
+          const cleanTarget = trimmedChapter.replace(/^chapter\s*\d+\s*:\s*/i, '').toLowerCase().trim();
+
+          const matchedDocs = fallbackSnap.docs.filter(d => {
+            const docCh = (d.data().chapter || '').trim();
+            const docSlug = slugify(docCh);
+            const docLower = docCh.toLowerCase();
+            const cleanDoc = docCh.replace(/^chapter\s*\d+\s*:\s*/i, '').toLowerCase().trim();
+            return docSlug === targetSlug || docLower === targetLower || cleanDoc === cleanTarget;
+          });
+
+          if (matchedDocs.length > 0) {
+            snapshot = { docs: matchedDocs } as any;
+          }
+        }
+
         const items = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContentItem));
-        // Group by contentType and return the most recent of each type
+        
+        // Sort newest first
+        items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        // Group by contentType and guarantee the most recent of each type is returned
         const grouped = items.reduce((acc, item) => {
-          if (!acc[item.contentType] || acc[item.contentType].createdAt < item.createdAt) {
+          if (!acc[item.contentType] || (acc[item.contentType].createdAt || 0) < (item.createdAt || 0)) {
             acc[item.contentType] = item;
           }
           return acc;
         }, {} as Record<string, ContentItem>);
+        
         const result = Object.values(grouped);
         cache.chapterContent[cacheKey] = result;
-        try {
-          sessionStorage.setItem(`cs_chap_${cacheKey}`, JSON.stringify({ timestamp: Date.now(), data: result }));
-        } catch (e) {}
         return result;
       } catch (error) {
         console.error("Error getting chapter content:", error);

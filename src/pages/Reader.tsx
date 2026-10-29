@@ -437,59 +437,84 @@ export default function Reader() {
   };
 
   useEffect(() => {
-    setLoading(true);
-    
-    // Check if it's an Interesting Topic (Beyond Syllabus)
-    if (isInteresting || formattedLevelName === 'Random Topic Authors Think Interesting') {
-      contentStore.getContentByLevel('Random Topic Authors Think Interesting').then(items => {
-        const matching = items
-          .filter(item => {
-            const matchSubject = subject ? item.subject.trim().toLowerCase() === subject.trim().toLowerCase() : true;
-            const matchChapter = item.chapter.trim().toLowerCase() === chapter.trim().toLowerCase();
-            return matchSubject && matchChapter;
-          })
-          .sort((a, b) => b.createdAt - a.createdAt);
-        const article = matching[0] || items.find(item => slugify(item.chapter) === slugify(chapter));
-        if (article) {
-          setContentItems([article]);
-        } else {
-          setContentItems([]);
-        }
-        setLoading(false);
-      });
-      return;
-    }
+    const loadContent = (forceFresh: boolean = true) => {
+      setLoading(true);
+      
+      // Check if it's an Interesting Topic (Beyond Syllabus)
+      if (isInteresting || formattedLevelName === 'Random Topic Authors Think Interesting') {
+        contentStore.getContentByLevel('Random Topic Authors Think Interesting', forceFresh).then(items => {
+          const matching = items
+            .filter(item => {
+              const matchSubject = subject ? item.subject.trim().toLowerCase() === subject.trim().toLowerCase() : true;
+              const matchChapter = item.chapter.trim().toLowerCase() === chapter.trim().toLowerCase();
+              return matchSubject && matchChapter;
+            })
+            .sort((a, b) => b.createdAt - a.createdAt);
+          const article = matching[0] || items.find(item => slugify(item.chapter) === slugify(chapter));
+          if (article) {
+            setContentItems([article]);
+          } else {
+            setContentItems([]);
+          }
+          setLoading(false);
+        });
+        return;
+      }
 
-    // Check if it's a News Article
-    if (formattedLevelName === 'News & Updates') {
-      contentStore.getContentByLevel('News & Updates').then(items => {
-        const matching = items
-          .filter(item => item.subject === subject && item.chapter === chapter)
-          .sort((a, b) => b.createdAt - a.createdAt);
-        const article = matching[0];
-        if (article) {
-          setContentItems([article]);
-        } else {
-          setContentItems([]);
-        }
-        setLoading(false);
-      });
-      return;
-    }
+      // Check if it's a News Article
+      if (formattedLevelName === 'News & Updates') {
+        contentStore.getContentByLevel('News & Updates', forceFresh).then(items => {
+          const matching = items
+            .filter(item => item.subject === subject && item.chapter === chapter)
+            .sort((a, b) => b.createdAt - a.createdAt);
+          const article = matching[0];
+          if (article) {
+            setContentItems([article]);
+          } else {
+            setContentItems([]);
+          }
+          setLoading(false);
+        });
+        return;
+      }
 
-    contentStore.getChapterContent(formattedLevelName, subject, chapter).then(items => {
-      setContentItems(items);
-      setLoading(false);
-      setTimeout(() => {
-        const hash = window.location.hash;
-        if (hash) {
-          document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      }, 100);
-    });
-  }, [formattedLevelName, subject, chapter]);
+      contentStore.getChapterContent(formattedLevelName, subject, chapter, forceFresh).then(items => {
+        setContentItems(items);
+        setLoading(false);
+        setTimeout(() => {
+          const hash = window.location.hash;
+          if (hash) {
+            document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+      });
+    };
+
+    loadContent(true);
+
+    // Live update listeners: whenever admin uploads content, refresh view instantly
+    const handleUpdate = () => {
+      contentStore.invalidateCache();
+      loadContent(true);
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'cs_last_content_update') {
+        contentStore.invalidateCache();
+        loadContent(true);
+      }
+    };
+
+    window.addEventListener('chartered_seeds_content_updated', handleUpdate);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('chartered_seeds_content_updated', handleUpdate);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [formattedLevelName, subject, chapter, isInteresting]);
 
   const handleDeleteArticle = async (id: string) => {
     try {
